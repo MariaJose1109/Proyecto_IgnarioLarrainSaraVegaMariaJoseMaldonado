@@ -1,6 +1,5 @@
 from DAO.Conexion import Conexion
 from datetime import datetime
-from DAO.CRUDUsuario import obtenerRolUsuario
 from DTO.Destino import Destino
 
 host = 'localhost'
@@ -8,11 +7,7 @@ user = 'admin1'
 password = 'admin'
 db = 'agencia_de_viajes'
 
-def agregarDestino(destino, nombre):
-    rol = obtenerRolUsuario(nombre)
-    if rol != "administrador":
-        print("Permiso denegado: Solo los administradores pueden agregar destinos.")
-        return False
+def agregarDestino(destino):
     try:
         con = Conexion(host, user, password, db)
         sql = "insert into destino set nombre='{}', descripcion='{}', actividades='{}', costo={}".format(
@@ -43,16 +38,26 @@ def consultarDestinos():
         return []
 
 #mostrar parcial
-#mostrar uno
 
-def actualizarDestino(destino,nombre):
-    rol = obtenerRolUsuario(nombre)
-    if rol != "administrador":
-       print("Permiso denegado: Solo los administradores pueden agregar destinos.")
-       return False
+#mostrar uno
+def consultarUnDestinos(id_destino):
     try:
         con = Conexion(host, user, password, db)
-        sql= "update destino set nombre ='{}', descripcion='{}', actividades='{}', costo={} where id_destino = {}".format(destino[1],destino[2],destino[3],destino[4],destino[0])
+        sql = "select * from destino where id_destino = {}".format(id_destino)
+        cursor = con.ejecutar_query(sql)
+        destinos = cursor.fetchall()
+        con.desconectar()
+        return destinos
+    except Exception as e:
+        print(f"Error al consultar los destinos: {e}")
+        return []
+
+
+def actualizarDestino(destino_id, nuevo_nombre,nueva_actividad, nueva_descripcion, nuevo_costo):
+    try:
+        con = Conexion(host, user, password, db)
+        sql = "UPDATE destino SET nombre = '{}', descripcion = '{}', actividades ='{}', costo = {} WHERE id_destino = {}".format(
+            nuevo_nombre, nueva_descripcion,nueva_actividad, nuevo_costo, destino_id )
         con.ejecutar_query(sql)
         con.commit()
         con.desconectar()
@@ -65,10 +70,6 @@ def actualizarDestino(destino,nombre):
         return False
 
 def eliminarDestino(id_destino,nombre ):
-    rol = obtenerRolUsuario(nombre)
-    if rol != "administrador":
-       print("Permiso denegado: Solo los administradores pueden agregar destinos.")
-       return False
     try:
         con = Conexion(host, user, password, db)
         sql = "delete from destino where id_destino = {}".format(id_destino)

@@ -23,7 +23,7 @@ def agregarUsuario(usuario):
         return False
 
 
-#mostrar todos
+#mostrar uno
 def obtenerUsuario(correo):
     try:
         con = Conexion(host, user, password, db)
@@ -37,22 +37,22 @@ def obtenerUsuario(correo):
         return None
 
 #mostrar parcial
-#mostrar uno
-
-## ya lo obtiene el login 
-def obtenerRolUsuario(nombre):
+#mostrar todos
+def obtenerTodosUsuario(correo):
     try:
         con = Conexion(host, user, password, db)
-        sql = "select tipo_usuario from usuario where nombre = '{}'".format(nombre)
-        cursor = con.ejecutar_query(sql) 
-        rol = cursor.fetchone()  # solo devuelve el rol
+        sql = "select * from usuario".format(correo)
+        cursor = con.ejecutar_query(sql)
+        datos = cursor.fetchall()
         con.desconectar()
-        if rol:
-            return rol[0]  # retorna el tipo de usuario (administrador o cliente)
-        else:
-            print("Usuario no encontrado.")
-            return None
+        return datos
     except Exception as e:
-        print(f"Error al obtener el rol del usuario: {e}")
+        print(f"Error al Obtener al Usuario: {e}")
         return None
+
+
+
+
+
+
 

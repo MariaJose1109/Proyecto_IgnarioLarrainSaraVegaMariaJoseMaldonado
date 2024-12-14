@@ -18,7 +18,7 @@ class Usuario:
             stored_password = usuario_data[3]
             if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
                 print("Inicio de sesión exitoso.")
-                return {"autenticado": True, "tipo_usuario": usuario_data[4]} # retorna autenticado para el login. tambien captura el tipo de usuario 
+                return {"autenticado": True, "tipo_usuario": usuario_data[4], "nombre": usuario_data[1] } # retorna autenticado para el login. tambien captura el tipo de usuario 
             else:
                 print("Contraseña incorrecta.")
         else:
