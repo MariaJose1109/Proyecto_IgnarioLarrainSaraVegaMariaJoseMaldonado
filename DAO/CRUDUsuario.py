@@ -4,7 +4,7 @@ from datetime import datetime
 host = 'localhost'
 user = 'admin1'
 password = 'admin'
-db = 'agencia_de_viajes'
+db = 'viajes_aventura_bd'
 
 
 def agregarUsuario(usuario):
@@ -26,33 +26,30 @@ def agregarUsuario(usuario):
 #mostrar uno
 def obtenerUsuario(correo):
     try:
-        con = Conexion(host, user, password, db)
-        sql = "select * from usuario where correo = '{}'".format(correo)
+        con = Conexion('localhost', 'admin1', 'admin', 'viajes_aventura_bd')
+        # Modifica la consulta para asegurar que solo obtienes un usuario
+        sql = f"SELECT id_usuario, nombre, tipo_usuario, correo, password FROM usuario WHERE correo = '{correo}' LIMIT 1"
         cursor = con.ejecutar_query(sql)
-        datos = cursor.fetchone()  # Obtén solo un registro
+        usuario_data = cursor.fetchone()  # Esto debería devolver un solo diccionario (el primer resultado)
         con.desconectar()
-        return datos
+        return usuario_data  # Devuelve el diccionario del usuario encontrado
     except Exception as e:
-        print(f"Error al Obtener al Usuario: {e}")
+        print(f"Error al obtener usuario: {e}")
         return None
 
-#mostrar parcial
-#mostrar todos
-def obtenerTodosUsuario(correo):
+
+def existeUsuario(id_usuario):
     try:
+        print(f"Verificando existencia del usuario con ID: {id_usuario}")
         con = Conexion(host, user, password, db)
-        sql = "select * from usuario".format(correo)
+        if con is None:
+            print("Error al conectar a la base de datos.")
+            return False
+        sql = "SELECT id_usuario FROM usuarios WHERE id_usuario = {}".format(id_usuario)
         cursor = con.ejecutar_query(sql)
-        datos = cursor.fetchall()
+        usuario = cursor.fetchone()
         con.desconectar()
-        return datos
+        return usuario is not None
     except Exception as e:
-        print(f"Error al Obtener al Usuario: {e}")
-        return None
-
-
-
-
-
-
-
+        print(f"Error al verificar la existencia del usuario: {e}")
+        return False

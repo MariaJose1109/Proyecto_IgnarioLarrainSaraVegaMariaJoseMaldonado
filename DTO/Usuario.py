@@ -11,19 +11,34 @@ class Usuario:
         self.fecha_registro = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
+
+    @staticmethod
     @staticmethod
     def login(correo, password):
         usuario_data = obtenerUsuario(correo)
-        if usuario_data:
-            stored_password = usuario_data[3]
+        if usuario_data:  # Si se ha encontrado el usuario
+            print("Datos del usuario autenticado:", usuario_data)  # Para depuración
+            stored_password = usuario_data['password']  # Accede al valor de la clave 'password'
+            
+            # Compara la contraseña hasheada con la ingresada por el usuario
             if bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
                 print("Inicio de sesión exitoso.")
-                return {"autenticado": True, "tipo_usuario": usuario_data[4], "nombre": usuario_data[1] } # retorna autenticado para el login. tambien captura el tipo de usuario 
+                datos_usuario = {
+                    "autenticado": True,
+                    "tipo_usuario": usuario_data['tipo_usuario'],  # Tipo de usuario
+                    "id_usuario": usuario_data['id_usuario'],  # ID del usuario
+                    "nombre": usuario_data['nombre'],  # Nombre del usuario
+                    "correo": usuario_data['correo']  # Agregar el correo al diccionario
+                }
+                print("Datos retornados por login:", datos_usuario)  # Verifica el diccionario retornado
+                return datos_usuario
             else:
                 print("Contraseña incorrecta.")
         else:
             print("Usuario no encontrado.")
+        
         return {"autenticado": False, "tipo_usuario": None}
+
     
     @staticmethod
     def registrarUsuario(nombre, correo, password, tipo_usuario):

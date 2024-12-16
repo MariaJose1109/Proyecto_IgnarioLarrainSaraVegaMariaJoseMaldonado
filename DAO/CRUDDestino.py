@@ -5,7 +5,7 @@ from DTO.Destino import Destino
 host = 'localhost'
 user = 'admin1'
 password = 'admin'
-db = 'agencia_de_viajes'
+db = 'viajes_aventura_bd'
 
 def agregarDestino(destino):
     try:
@@ -28,9 +28,10 @@ def agregarDestino(destino):
 def consultarDestinos():
     try:
         con = Conexion(host, user, password, db)
-        sql = "select * from destino"
+        sql = "SELECT * FROM destino"
         cursor = con.ejecutar_query(sql)
-        destinos = cursor.fetchall()
+        destinos = cursor.fetchall()  # Obtendrás una lista de diccionarios
+        print(destinos)
         con.desconectar()
         return destinos
     except Exception as e:
@@ -69,7 +70,7 @@ def actualizarDestino(destino_id, nuevo_nombre,nueva_actividad, nueva_descripcio
         print(f"Error al actualizar el destino: {e}")
         return False
 
-def eliminarDestino(id_destino,nombre ):
+def eliminarDestino(id_destino ):
     try:
         con = Conexion(host, user, password, db)
         sql = "delete from destino where id_destino = {}".format(id_destino)
