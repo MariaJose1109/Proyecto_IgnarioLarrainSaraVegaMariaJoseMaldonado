@@ -52,20 +52,20 @@ class Reserva:
             print("No fue posible cancelar la reserva.")
             return False
 
-def confirmarReserva(self):
-    if self.estado != "pendiente":
-        print(f"No se puede confirmar: la reserva no está en estado 'pendiente'. Estado actual: {self.estado}")
-        return False
-    else:
-        self.estado = "confirmada"
-        # Realiza la actualización en la base de datos
-        try:
-            if cambiarEstadoReserva(self.id_reserva, self.estado):
-                print(f"Reserva confirmada correctamente: Usuario ID {self.id_usuario}, Paquete ID {self.id_paquete}, Estado {self.estado}")
-                return True
-            else:
-                print(f"Error al confirmar la reserva en la base de datos.")
-                return False
-        except Exception as e:
-            print(f"Error inesperado al confirmar la reserva: {e}")
+    def confirmarReserva(self):
+        if self.estado != "pendiente":
+            print(f"No se puede confirmar: la reserva no está en estado 'pendiente'. Estado actual: {self.estado}")
             return False
+        else:
+            self.estado = "confirmada"
+            # Realiza la actualización en la base de datos
+            try:
+                if cambiarEstadoReserva(self.id_reserva, self.estado):
+                    print(f"Reserva confirmada correctamente: Usuario ID {self.id_usuario}, Paquete ID {self.id_paquete}, Estado {self.estado}")
+                    return True
+                else:
+                    print(f"Error al confirmar la reserva en la base de datos.")
+                    return False
+            except Exception as e:
+                print(f"Error inesperado al confirmar la reserva: {e}")
+                return False
