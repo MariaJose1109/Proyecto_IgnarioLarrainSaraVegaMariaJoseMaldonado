@@ -154,7 +154,6 @@ def menuPaquetes(nombre_usuario):
             try:
                 destinos_ids = [int(id.strip()) for id in destinos_seleccionados.split(",") if id.strip().isdigit()]
                 destinos_validos = [destino for destino in destinos if destino["id_destino"] in destinos_ids]
-                
                 if not destinos_validos:
                     print("No se seleccionaron destinos válidos. Por favor, intente nuevamente.")
                     continue
@@ -238,15 +237,14 @@ def menuReservas(nombre_usuario):
         
         elif opcion == "2":
             try:
-                # Mostrar paquetes disponibles
-                paquetes = consultarPaquetesDisponibles()  # Suponiendo que esta función retorna una lista de paquetes
+                paquetes = consultarPaquetesDisponibles()
                 if paquetes:
                     print("\n--- Paquetes disponibles ---")
                     for paquete in paquetes:
                         print(f"ID Paquete: {paquete['id_paquete']}, Nombre: {paquete['nombre_paquete']}, Descripción: {paquete['descripcion']}, Precio: {paquete['precio_total']}")
                 else:
                     print("No hay paquetes turísticos disponibles.")
-                    continue  # Salir del flujo de reserva si no hay paquetes
+                    continue 
                 id_paquete = int(input("Ingrese el ID del paquete turístico que desea reservar: "))
                 clientes = consultarUsuariosTipoCliente()  
                 if clientes:

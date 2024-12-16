@@ -11,8 +11,6 @@ class Usuario:
         self.fecha_registro = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-
-    @staticmethod
     @staticmethod
     def login(correo, password):
         usuario_data = obtenerUsuario(correo)

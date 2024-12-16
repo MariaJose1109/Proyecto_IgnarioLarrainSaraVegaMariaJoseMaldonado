@@ -10,20 +10,12 @@ class PaqueteTuristico:
         self.precio_total = precio_total
 
     def registrarPaquete(self, destinos_validos):
-       if not destinos_validos:
-           print("No se han seleccionado destinos válidos para el paquete.")
-           return False
-       # Insertar el paquete y sus destinos asociados (solo una vez)
        if agregarPaqueteConDestino(self, destinos_validos):
-           print(f"Paquete '{self.nombre_paquete}' registrado correctamente.")
            return True
        else:
-           print("Error al registrar el paquete.")
            return False
 
-
     def actualizarPaquete(self, nuevo_nombre, nueva_descripcion, id_destino, nueva_fecha_inicio, nueva_fecha_fin):
-        # Actualizar el paquete en la base de datos
         if actualizarPaqueteConDestino(self.id_paquete, nuevo_nombre, nueva_descripcion, id_destino, nueva_fecha_inicio, nueva_fecha_fin):
             print(f"Paquete con ID {self.id_paquete} actualizado correctamente.")
             return True
@@ -43,22 +35,13 @@ class PaqueteTuristico:
     @staticmethod
     def consultarPaquetes():
         paquetes = consultarTodosPaquetes()  # Recuperamos los paquetes con las fechas convertidas
-    
         if paquetes:  # Verifica si la lista no está vacía
             print("\n--- LISTA DE PAQUETES TURÍSTICOS ---\n")
             print(f"{'ID':<5} {'Nombre':<25} {'Descripción':<35} {'Precio':<10} {'Inicio':<12} {'Fin':<12}")
             print("-" * 100)
-    
             for paquete in paquetes:
-                # Asegúrate de que las fechas estén correctamente formateadas
                 fecha_inicio = paquete['fecha_inicio']
                 fecha_fin = paquete['fecha_fin']
-    
-                # Verifica si las fechas son objetos datetime y formatea
-                fecha_inicio = fecha_inicio.strftime("%Y-%m-%d") if isinstance(fecha_inicio, datetime) else fecha_inicio
-                fecha_fin = fecha_fin.strftime("%Y-%m-%d") if isinstance(fecha_fin, datetime) else fecha_fin
-    
-                # Imprimir el paquete con las fechas formateadas
                 print(f"{paquete['id_paquete']:<5} "
                       f"{paquete['nombre_paquete']:<25} "
                       f"{paquete['descripcion'][:35]:<35} "

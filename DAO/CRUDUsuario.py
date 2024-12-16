@@ -26,7 +26,7 @@ def agregarUsuario(usuario):
 #mostrar uno
 def obtenerUsuario(correo):
     try:
-        con = Conexion('localhost', 'admin1', 'admin', 'viajes_aventura_bd')
+        con = Conexion(host, user, password, db)
         # Modifica la consulta para asegurar que solo obtienes un usuario
         sql = f"SELECT id_usuario, nombre, tipo_usuario, correo, password FROM usuario WHERE correo = '{correo}' LIMIT 1"
         cursor = con.ejecutar_query(sql)
@@ -45,7 +45,7 @@ def existeUsuario(id_usuario):
         if con is None:
             print("Error al conectar a la base de datos.")
             return False
-        sql = "SELECT id_usuario FROM usuarios WHERE id_usuario = {}".format(id_usuario)
+        sql = "SELECT id_usuario FROM usuario WHERE id_usuario = {}".format(id_usuario)
         cursor = con.ejecutar_query(sql)
         usuario = cursor.fetchone()
         con.desconectar()
