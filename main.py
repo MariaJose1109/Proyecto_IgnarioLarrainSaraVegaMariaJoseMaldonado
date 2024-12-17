@@ -103,7 +103,7 @@ def menuDestinos():
                 except ValueError:
                     print("Error: El costo debe ser numérico.")
 
-            destino = Destino(None, nombre, descripcion, actividades, costo)
+            destino = Destino(nombre, descripcion, actividades, costo)
             if destinoCRUD.agregarDestino(destino):
                 print("Destino registrado con éxito.")
             else:
