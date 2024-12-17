@@ -1,42 +1,63 @@
 import pymysql
-from pymysql.cursors import DictCursor  # Importamos el cursor para obtener resultados como diccionario
+from pymysql.cursors import DictCursor
 
 class Conexion:
     def __init__(self, host, user, password, db):
         try:
-            self.conexion = pymysql.connect(
+            self.db = pymysql.connect(
                 host=host,
                 user=user,
                 password=password,
                 db=db,
-                cursorclass=DictCursor  # Configurar para que las respuestas sean diccionarios / Como ahora son diccionarios, la forma de buscar los atributos es a través del nombre y no la posición
+                cursorclass=DictCursor  # Configurar resultados como diccionarios
             )
-            self.cursor = self.conexion.cursor()
-        except Exception as e:
+            self.cursor = self.db.cursor()
+        except pymysql.MySQLError as e:
             print(f"Error al conectar con la base de datos: {e}")
+            self.db = None  # Prevenir operaciones con una conexión inválida
 
-    def ejecutar_query(self, sql):
+    def ejecutaQuery(self, sql, params=None):
+        """Ejecuta una consulta SQL con parámetros opcionales."""
+        if not self.db:
+            print("No se puede ejecutar la consulta: conexión no establecida.")
+            return None
         try:
-            self.cursor.execute(sql)  # Ejecutar la consulta SQL
-            return self.cursor  # Retornar el cursor
-        except Exception as e:
+            if params:
+                self.cursor.execute(sql, params)
+            else:
+                self.cursor.execute(sql)
+            return self.cursor
+        except pymysql.MySQLError as e:
             print(f"Error al ejecutar la consulta: {e}")
             return None
 
-    def desconectar(self):
-        try:
-            self.conexion.close()
-        except Exception as e:
-            print(f"Error al cerrar la conexión: {e}")
-
     def commit(self):
+        """Confirma los cambios realizados en la base de datos."""
+        if not self.db:
+            print("No se puede realizar commit: conexión no establecida.")
+            return
         try:
-            self.conexion.commit()
-        except Exception as e:
+            self.db.commit()
+        except pymysql.MySQLError as e:
             print(f"Error en commit: {e}")
 
     def rollback(self):
+        """Revertir los cambios realizados en la base de datos."""
+        if not self.db:
+            print("No se puede realizar rollback: conexión no establecida.")
+            return
         try:
-            self.conexion.rollback()
-        except Exception as e:
+            self.db.rollback()
+            print("Cambios revertidos exitosamente.")
+        except pymysql.MySQLError as e:
             print(f"Error en rollback: {e}")
+
+    def desconectar(self):
+        """Cierra la conexión con la base de datos."""
+        if not self.db:
+            print("No se puede cerrar la conexión: ya está desconectada o no se estableció.")
+            return
+        try:
+            self.db.close()
+        except pymysql.MySQLError as e:
+            print(f"Error al cerrar la conexión: {e}")

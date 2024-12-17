@@ -1,55 +1,50 @@
+import pymysql
 from DAO.Conexion import Conexion
-from datetime import datetime
 
-host = 'localhost'
-user = 'admin1'
-password = 'admin'
-db = 'viajes_aventura_bd'
+class CRUDUsuario:
+    # Datos de conexión
+    host = 'localhost'
+    user = 'adminagencia'
+    password = 'adminagencia'
+    db = 'agencia_de_viajes'
 
-
-def agregarUsuario(usuario):
-    con = None
-    try:
-        con = Conexion(host, user, password, db)
-        sql = "insert into usuario set nombre='{}', correo='{}', password='{}', tipo_usuario='{}', fecha_registro='{}'".format( usuario.nombre, usuario.correo, usuario.password, usuario.tipo_usuario, usuario.fecha_registro)
-        con.ejecutar_query(sql)
-        con.commit()
-        con.desconectar()
-        return True
-    except Exception as e:
-        if con:
-            con.rollback()
-        print(f"Error al Agregar un Usuario: {e}")
-        return False
-
-
-#mostrar uno
-def obtenerUsuario(correo):
-    try:
-        con = Conexion(host, user, password, db)
-        # Modifica la consulta para asegurar que solo obtienes un usuario
-        sql = f"SELECT id_usuario, nombre, tipo_usuario, correo, password FROM usuario WHERE correo = '{correo}' LIMIT 1"
-        cursor = con.ejecutar_query(sql)
-        usuario_data = cursor.fetchone()  # Esto debería devolver un solo diccionario (el primer resultado)
-        con.desconectar()
-        return usuario_data  # Devuelve el diccionario del usuario encontrado
-    except Exception as e:
-        print(f"Error al obtener usuario: {e}")
-        return None
-
-
-def existeUsuario(id_usuario):
-    try:
-        print(f"Verificando existencia del usuario con ID: {id_usuario}")
-        con = Conexion(host, user, password, db)
-        if con is None:
-            print("Error al conectar a la base de datos.")
+    @staticmethod
+    def agregarUsuario(usuario):
+        try:
+            con = Conexion(CRUDUsuario.host, CRUDUsuario.user, CRUDUsuario.password, CRUDUsuario.db)
+            sql = """
+            INSERT INTO usuario (nombre, correo, password, tipo_usuario, fecha_registro)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            valores = (usuario.nombre, usuario.correo, usuario.password, usuario.tipoUsuario, usuario.fechaRegistro)
+            con.ejecutaQuery(sql, valores)
+            con.commit()
+            print("Usuario agregado con éxito.")
+            return True
+        except Exception as e:
+            print(f"Error al agregar el usuario: {e}")
+            if con:
+                con.rollback()
             return False
-        sql = "SELECT id_usuario FROM usuario WHERE id_usuario = {}".format(id_usuario)
-        cursor = con.ejecutar_query(sql)
-        usuario = cursor.fetchone()
-        con.desconectar()
-        return usuario is not None
-    except Exception as e:
-        print(f"Error al verificar la existencia del usuario: {e}")
-        return False
+        finally:
+            if con:
+                con.desconectar()
+
+    @staticmethod
+    def obtenerUsuario(correo):
+        try:
+            con = Conexion(CRUDUsuario.host, CRUDUsuario.user, CRUDUsuario.password, CRUDUsuario.db)
+            sql = """
+            SELECT id_usuario, nombre, correo, password, tipo_usuario, fecha_registro
+            FROM usuario
+            WHERE correo = %s LIMIT 1
+            """
+            cursor = con.ejecutaQuery(sql, (correo,))
+            usuarioData = cursor.fetchone()
+            return usuarioData
+        except Exception as e:
+            print(f"Error al obtener el usuario: {e}")
+            return None
+        finally:
+            if con:
+                con.desconectar()
