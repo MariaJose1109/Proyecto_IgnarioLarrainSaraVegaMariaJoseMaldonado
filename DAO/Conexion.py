@@ -1,42 +1,60 @@
 import pymysql
-from pymysql.cursors import DictCursor  # Importamos el cursor para obtener resultados como diccionario
+from pymysql.cursors import DictCursor
 
 class Conexion:
     def __init__(self, host, user, password, db):
         try:
-            self.conexion = pymysql.connect(
+            self.db = pymysql.connect(
                 host=host,
                 user=user,
                 password=password,
                 db=db,
-                cursorclass=DictCursor  # Configurar para que las respuestas sean diccionarios / Como ahora son diccionarios, la forma de buscar los atributos es a través del nombre y no la posición
+                cursorclass=DictCursor
             )
-            self.cursor = self.conexion.cursor()
-        except Exception as e:
-            print(f"Error al conectar con la base de datos: {e}")
+            self.cursor = self.db.cursor()
+        except pymysql.MySQLError:
+            self.db = None  # Conexión inválida
 
-    def ejecutar_query(self, sql):
+    def ejecutaQuery(self, sql, params=None):
+        """Ejecuta una consulta SQL con parámetros opcionales. Retorna el cursor o None si hay error."""
+        if not self.db:
+            return None
         try:
-            self.cursor.execute(sql)  # Ejecutar la consulta SQL
-            return self.cursor  # Retornar el cursor
-        except Exception as e:
-            print(f"Error al ejecutar la consulta: {e}")
+            if params:
+                self.cursor.execute(sql, params)
+            else:
+                self.cursor.execute(sql)
+            return self.cursor
+        except pymysql.MySQLError:
+            return None
+
+    def commit(self):
+        """Confirma los cambios realizados en la base de datos. Retorna True si se realiza con éxito, de lo contrario None."""
+        if not self.db:
+            return None
+        try:
+            self.db.commit()
+            return True
+        except pymysql.MySQLError:
+            return None
+
+    def rollback(self):
+        """Revierte los cambios realizados en la base de datos. Retorna True si se realiza con éxito, de lo contrario None."""
+        if not self.db:
+            return None
+        try:
+            self.db.rollback()
+            return True
+        except pymysql.MySQLError:
             return None
 
     def desconectar(self):
+        """Cierra la conexión con la base de datos."""
+        if not self.db:
+            return
         try:
-            self.conexion.close()
-        except Exception as e:
-            print(f"Error al cerrar la conexión: {e}")
-
-    def commit(self):
-        try:
-            self.conexion.commit()
-        except Exception as e:
-            print(f"Error en commit: {e}")
-
-    def rollback(self):
-        try:
-            self.conexion.rollback()
-        except Exception as e:
-            print(f"Error en rollback: {e}")
+            self.db.close()
+        except pymysql.MySQLError:
+            pass
+        finally:
+            self.db = None
