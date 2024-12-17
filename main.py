@@ -354,18 +354,23 @@ def menuPaquetes(nombre):
 
         if opcion == "1":
             print("\n--- MOSTRAR TODOS LOS PAQUETES ---")
-            paquetes = paqueteCRUD.mostrarTodos()
+            paquetes = paqueteCRUD.obtenerPaquetesConDestinos()
             if paquetes:
-                # Ordenar por fecha de inicio y filtrar fechas válidas
-                paquetes_validos = [
-                    p for p in paquetes if p['fecha_inicio'] != "0000-00-00" and p['fecha_fin'] != "0000-00-00"
-                ]
-                paquetes_ordenados = sorted(paquetes_validos, key=lambda x: x['fecha_inicio'])
+                table_data = [[
+                    p['id_paquete'], 
+                    p['nombre_paquete'], 
+                    p['descripcion'], 
+                    p['precio_total'], 
+                    p['fecha_inicio'], 
+                    p['fecha_fin'], 
+                    p['destinos'] if p['destinos'] else "No tiene destinos"
+                ] for p in paquetes]
 
-                table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'],
-                               p['fecha_inicio'], p['fecha_fin']] for p in paquetes_ordenados]
-                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"],
-                               tablefmt="fancy_grid"))
+                print(tabulate(
+                    table_data, 
+                    headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin", "Destinos"], 
+                    tablefmt="fancy_grid"
+                ))
             else:
                 print("No hay paquetes turísticos registrados.")
             input("Presione Enter para continuar...")
@@ -508,18 +513,19 @@ def menuPaquetes(nombre):
 def menuReservas(nombre):
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("---------------------------")
-        print("         MENÚ RESERVAS     ")
-        print("---------------------------")
+        print("\n==========================")
+        print("      MENÚ RESERVAS       ")
+        print("==========================")
         print("1. Mostrar todas las reservas")
-        print("2. Mostrar una reserva")
-        print("3. Mostrar reservas parciales")
+        print("2. Mostrar una reserva específica")
+        print("3. Mostrar reservas por estado")
         print("4. Realizar una nueva reserva")
         print("5. Cancelar una reserva")
         print("6. Confirmar una reserva")
         print("7. Salir")
-        opcion = input("Por favor, elija una opción (1-7): ").strip()
+        opcion = input("Seleccione una opción (1-7): ").strip()
 
+        # 1. Mostrar todas las reservas
         if opcion == "1":
             print("\n--- MOSTRAR TODAS LAS RESERVAS ---")
             reservas = reservaCRUD.consultarTodosReserva()
@@ -530,77 +536,145 @@ def menuReservas(nombre):
                 print("No hay reservas registradas.")
             input("Presione Enter para continuar...")
 
+        # 2. Mostrar una reserva específica
         elif opcion == "2":
-            print("\n--- MOSTRAR UNA RESERVA ---")
-            idReserva = input("Ingrese el ID de la reserva: ").strip()
-            r = reservaCRUD.consultarReservaPorId(idReserva)
-            if r:
-                table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']]]
-                print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
-            else:
-                print("Reserva no encontrada.")
+            print("\n--- MOSTRAR UNA RESERVA ESPECÍFICA ---")
+            while True:
+                id_reserva = input("Ingrese el ID de la reserva: ").strip()
+                if id_reserva.isdigit():
+                    reserva = reservaCRUD.consultarReservaPorId(id_reserva)
+                    if reserva:
+                        table_data = [[reserva['id_reserva'], reserva['id_usuario'], reserva['id_paquete'], reserva['fecha_reserva'], reserva['estado']]]
+                        print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
+                    else:
+                        print("Reserva no encontrada.")
+                    break
+                else:
+                    print("Debe ingresar un ID válido.")
             input("Presione Enter para continuar...")
 
+        # 3. Mostrar reservas por estado
         elif opcion == "3":
-            print("\n--- MOSTRAR RESERVAS PARCIALES ---")
-            estado = input("Ingrese el estado de la reserva (pendiente, confirmada, etc.): ").strip()
-            reservas = reservaCRUD.consultarReservasParciales(estado)
-            if reservas:
-                table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] for r in reservas]
-                print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
-            else:
-                print(f"No hay reservas con el estado '{estado}'.")
+            print("\n--- MOSTRAR RESERVAS POR ESTADO ---")
+            while True:
+                estado = input("Ingrese el estado de la reserva (pendiente, confirmada, cancelada): ").strip().lower()
+                if estado in ["pendiente", "confirmada", "cancelada"]:
+                    reservas = reservaCRUD.consultarReservasParciales(estado)
+                    if reservas:
+                        table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] for r in reservas]
+                        print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
+                    else:
+                        print(f"No hay reservas con el estado '{estado}'.")
+                    break
+                else:
+                    print("Estado inválido. Debe ser 'pendiente', 'confirmada' o 'cancelada'.")
             input("Presione Enter para continuar...")
 
+        # 4. Realizar una nueva reserva
         elif opcion == "4":
             print("\n--- REALIZAR UNA NUEVA RESERVA ---")
-            # Mostrar paquetes para elegir
             paquetes = paqueteCRUD.mostrarTodos()
-            if paquetes:
-                table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] for p in paquetes]
-                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
-            else:
-                print("No hay paquetes disponibles.")
+            if not paquetes:
+                print("No hay paquetes turísticos disponibles para reservar.")
                 input("Presione Enter para continuar...")
                 continue
 
-            idUsuario = input("Ingrese el ID del usuario: ").strip()
-            idPaquete = input("Ingrese el ID del paquete: ").strip()
-            fechaReserva = input("Ingrese la fecha de la reserva (YYYY-MM-DD): ").strip()
-            nuevaReserva = Reserva(idUsuario, idPaquete, fechaReserva)
-            if nuevaReserva.realizarReserva():
-                print("Reserva realizada con éxito.")
+            # Mostrar paquetes disponibles
+            table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] for p in paquetes]
+            print(tabulate(table_data, headers=["ID Paquete", "Nombre", "Descripción", "Precio", "Inicio", "Fin"], tablefmt="fancy_grid"))
+
+            # Solicitar datos válidos
+            while True:
+                id_usuario = input("Ingrese el ID del usuario: ").strip()
+                if id_usuario.isdigit():
+                    break
+                print("El ID del usuario debe ser numérico.")
+
+            while True:
+                id_paquete = input("Ingrese el ID del paquete: ").strip()
+                if id_paquete.isdigit():
+                    paquete_existente = next((p for p in paquetes if p['id_paquete'] == int(id_paquete)), None)
+                    if paquete_existente:
+                        break
+                    print("El ID del paquete no existe.")
+                else:
+                    print("El ID del paquete debe ser numérico.")
+
+            fecha_reserva = datetime.now().date()
+
+            # Confirmar reserva
+            print("\nResumen de la reserva:")
+            print(f"ID Usuario: {id_usuario}")
+            print(f"ID Paquete: {id_paquete}")
+            print(f"Fecha Reserva: {fecha_reserva}")
+            confirmar = input("¿Confirmar reserva? [SI/NO]: ").strip().lower()
+            if confirmar == "si":
+                nueva_reserva = Reserva(id_usuario, id_paquete, fecha_reserva)
+                if nueva_reserva.realizarReserva():
+                    print("Reserva realizada con éxito.")
+                else:
+                    print("No se pudo realizar la reserva.")
             else:
-                print("No se pudo realizar la reserva.")
+                print("Reserva cancelada por el usuario.")
             input("Presione Enter para continuar...")
 
+        # 5. Cancelar una reserva
         elif opcion == "5":
             print("\n--- CANCELAR UNA RESERVA ---")
-            idReserva = input("Ingrese el ID de la reserva a cancelar: ").strip()
-            # Se asume que Reserva tiene un método estático o similar
-            if Reserva.cancelarReservaPorId(idReserva):
-                print("Reserva cancelada con éxito.")
-            else:
-                print("No se pudo cancelar la reserva. Verifique el ID.")
+            reservas = reservaCRUD.consultarTodosReserva()
+            if not reservas:
+                print("No hay reservas para cancelar.")
+                input("Presione Enter para continuar...")
+                continue
+
+            table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] for r in reservas]
+            print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
+
+            while True:
+                id_reserva = input("Ingrese el ID de la reserva a cancelar: ").strip()
+                if id_reserva.isdigit():
+                    if Reserva.cancelarReservaPorId(id_reserva):
+                        print("Reserva cancelada con éxito.")
+                    else:
+                        print("No se pudo cancelar la reserva. Verifique el ID.")
+                    break
+                else:
+                    print("Debe ingresar un ID válido.")
             input("Presione Enter para continuar...")
 
+        # 6. Confirmar una reserva
         elif opcion == "6":
             print("\n--- CONFIRMAR UNA RESERVA ---")
-            idReserva = input("Ingrese el ID de la reserva a confirmar: ").strip()
-            if Reserva.confirmarReservaPorId(idReserva):
-                print("Reserva confirmada con éxito.")
-            else:
-                print("No se pudo confirmar la reserva. Verifique el ID.")
+            reservas = reservaCRUD.consultarTodosReserva()
+            if not reservas:
+                print("No hay reservas para confirmar.")
+                input("Presione Enter para continuar...")
+                continue
+
+            table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] for r in reservas]
+            print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
+
+            while True:
+                id_reserva = input("Ingrese el ID de la reserva a confirmar: ").strip()
+                if id_reserva.isdigit():
+                    if Reserva.confirmarReservaPorId(id_reserva):
+                        print("Reserva confirmada con éxito.")
+                    else:
+                        print("No se pudo confirmar la reserva. Verifique el ID.")
+                    break
+                else:
+                    print("Debe ingresar un ID válido.")
             input("Presione Enter para continuar...")
 
+        # 7. Salir
         elif opcion == "7":
             print("Regresando al menú principal...")
             input("Presione Enter para continuar...")
             break
+
         else:
             print("Opción no válida. Intente nuevamente.")
             input("Presione Enter para continuar...")
-
 
 def menuAdmin(nombre, idUsuario):
     while True:

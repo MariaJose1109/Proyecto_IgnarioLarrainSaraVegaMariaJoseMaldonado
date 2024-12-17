@@ -78,6 +78,36 @@ def agregarPaqueteConDestino(paquete, destinos):
         if con:
             con.desconectar()
 
+def obtenerPaquetesConDestinos():
+    """
+    Devuelve una lista de paquetes junto con sus destinos asociados.
+    """
+    try:
+        con = Conexion(host, user, password, db)
+        sql = """
+        SELECT 
+            pt.id_paquete, 
+            pt.nombre_paquete, 
+            pt.descripcion, 
+            pt.precio_total, 
+            pt.fecha_inicio, 
+            pt.fecha_fin,
+            GROUP_CONCAT(d.nombre SEPARATOR ', ') AS destinos
+        FROM paquete_turistico pt
+        LEFT JOIN detalle_paquete dp ON pt.id_paquete = dp.id_paquete
+        LEFT JOIN destino d ON dp.id_destino = d.id_destino
+        GROUP BY pt.id_paquete
+        ORDER BY pt.id_paquete;
+        """
+        cursor = con.ejecutaQuery(sql)
+        paquetes = cursor.fetchall()
+        return paquetes
+    except Exception as e:
+        print(f"Error al obtener paquetes con destinos: {e}")
+        return []
+    finally:
+        con.desconectar()
+
 # Eliminar paquete turístico
 def eliminarPaquete(idPaquete):
     """

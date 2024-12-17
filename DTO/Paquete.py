@@ -21,11 +21,7 @@ class Paquete:
     def generarPaqueteAleatorio():
         """
         Genera un objeto Paquete y una lista de destinos seleccionados aleatoriamente.
-        No inserta el paquete en la base de datos. Esa responsabilidad recae en la capa superior.
-
-        Retorna:
-            - paquete (Paquete): El objeto paquete generado, o None si no se pudieron generar destinos.
-            - destinos_seleccionados (list): Lista de destinos seleccionados para este paquete, o None si no se pudo.
+        Retorna el objeto paquete y la lista de destinos.
         """
         try:
             destinos_disponibles = mostrarTodosDestinos()  # Obtener destinos existentes
@@ -33,11 +29,8 @@ class Paquete:
                 print("No hay destinos disponibles para generar paquetes.")
                 return None, None
 
-            # Asegurar que haya al menos 1 destino
-            cantidad_destinos_disponibles = len(destinos_disponibles)
-            cantidad_destinos = min(random.randint(2, 5), cantidad_destinos_disponibles)  # No puede ser mayor a la cantidad disponible
-
-            # Seleccionar aleatoriamente los destinos disponibles
+            # Seleccionar aleatoriamente entre 2 y 5 destinos
+            cantidad_destinos = min(random.randint(2, 5), len(destinos_disponibles))
             destinos_seleccionados = random.sample(destinos_disponibles, cantidad_destinos)
 
             # Generar fechas aleatorias (fecha de inicio y fin válidas)
@@ -48,26 +41,12 @@ class Paquete:
             # Calcular precio total sumando el costo de los destinos
             precio_total = sum(destino["costo"] for destino in destinos_seleccionados)
 
-            # Nombres y ubicaciones base para nombres atractivos
-            nombres_base = [
-                "Aventura Extrema", "Ruta del Sol", "Explorador Urbano", "Escapada Romántica", 
-                "Maravillas Naturales", "Viaje Cultural", "Reto de la Selva", "Descubre el Mundo", 
-                "Relax Total", "Gastronomía y Tradición", "Explorando el Paraíso", "Aventura en la Montaña"
-            ]
+            # Crear descripción corta
+            descripcion = f"Paquete con {cantidad_destinos} destinos increíbles."
 
-            ubicaciones_base = [
-                "en la playa", "en la montaña", "en el campo", "en la ciudad", "en el desierto", 
-                "en la selva", "en el bosque", "en la isla", "en la ruta", "en el valle"
-            ]
-
-            # Generar nombre atractivo para el paquete
-            nombre_paquete = f"{random.choice(nombres_base)} {random.choice(ubicaciones_base)}"
-
-            # Crear descripción aleatoria
-            descripcion = (f"Paquete con {cantidad_destinos} destinos increíbles, "
-                        f"para disfrutar desde el {fecha_inicio.date()} hasta el {fecha_fin.date()}.")
-
-            # Crear el objeto Paquete con fechas válidas
+            # Crear el objeto Paquete
+            nombre_paquete = random.choice(["Aventura", "Reto", "Descubre el Mundo"]) + " en " + \
+                            random.choice(["la playa", "el bosque", "el cerro", "el valle", "la ciudad"])
             nuevo_paquete = Paquete(
                 nombre_paquete=nombre_paquete,
                 descripcion=descripcion,
@@ -77,7 +56,6 @@ class Paquete:
             )
             nuevo_paquete.destinos = destinos_seleccionados
 
-            # Devolver el paquete y los destinos seleccionados
             return nuevo_paquete, destinos_seleccionados
 
         except Exception as e:
