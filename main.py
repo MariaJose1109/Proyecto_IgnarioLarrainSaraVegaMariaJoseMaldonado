@@ -330,29 +330,42 @@ def generarPaquetesAleatorios():
 
     input("Presione Enter para continuar...")
 
+from tabulate import tabulate
+import os
+import DAO.CRUDPaquete as paqueteCRUD
+from DTO.Paquete import Paquete
+from datetime import datetime
+
+
 def menuPaquetes(nombre):
     while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         print("\n============================")
-        print("    MENÚ PAQUETES TURÍSTICOS   ")
+        print("    MENÚ PAQUETES TURÍSTICOS")
         print("============================")
         print("1. Mostrar todos los paquetes")
         print("2. Mostrar un paquete específico")
         print("3. Mostrar paquetes parciales")
-        print("4. Agregar paquete")
-        print("5. Eliminar paquete")
-        print("6. Actualizar paquete")
-        print("7. Generar paquetes aleatorios")
-        print("8. Salir")
+        print("4. Eliminar paquete")
+        print("5. Actualizar paquete")
+        print("6. Generar paquetes aleatorios")
+        print("7. Salir")
         opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
             print("\n--- MOSTRAR TODOS LOS PAQUETES ---")
             paquetes = paqueteCRUD.mostrarTodos()
             if paquetes:
-                table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']]
-                              for p in paquetes]
-                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
+                # Ordenar por fecha de inicio y filtrar fechas válidas
+                paquetes_validos = [
+                    p for p in paquetes if p['fecha_inicio'] != "0000-00-00" and p['fecha_fin'] != "0000-00-00"
+                ]
+                paquetes_ordenados = sorted(paquetes_validos, key=lambda x: x['fecha_inicio'])
+
+                table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'],
+                               p['fecha_inicio'], p['fecha_fin']] for p in paquetes_ordenados]
+                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"],
+                               tablefmt="fancy_grid"))
             else:
                 print("No hay paquetes turísticos registrados.")
             input("Presione Enter para continuar...")
@@ -361,11 +374,13 @@ def menuPaquetes(nombre):
             print("\n--- MOSTRAR UN PAQUETE ---")
             idPaquete = input("Ingrese el ID del paquete: ").strip()
             paquete = paqueteCRUD.mostrarUno(idPaquete)
-            if paquete:
-                table_data = [[paquete['id_paquete'], paquete['nombre_paquete'], paquete['descripcion'], paquete['precio_total'], paquete['fecha_inicio'], paquete['fecha_fin']]]
-                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
+            if paquete and paquete['fecha_inicio'] != "0000-00-00":
+                table_data = [[paquete['id_paquete'], paquete['nombre_paquete'], paquete['descripcion'],
+                               paquete['precio_total'], paquete['fecha_inicio'], paquete['fecha_fin']]]
+                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"],
+                               tablefmt="fancy_grid"))
             else:
-                print("No se encontró un paquete con ese ID.")
+                print("No se encontró un paquete válido con ese ID.")
             input("Presione Enter para continuar...")
 
         elif opcion == "3":
@@ -373,57 +388,52 @@ def menuPaquetes(nombre):
             try:
                 cantidad = int(input("¿Cuántos paquetes desea mostrar?: ").strip())
                 paquetes = paqueteCRUD.mostrarParcial(cantidad)
-                if paquetes:
-                    table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']]
-                                  for p in paquetes]
-                    print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
-                else:
-                    print("No se encontraron paquetes turísticos para mostrar.")
+                paquetes_validos = [p for p in paquetes if p['fecha_inicio'] != "0000-00-00"]
+                table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'],
+                               p['fecha_inicio'], p['fecha_fin']] for p in paquetes_validos]
+                print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"],
+                               tablefmt="fancy_grid"))
             except ValueError:
                 print("Debe ingresar un número válido.")
             input("Presione Enter para continuar...")
 
         elif opcion == "4":
-            print("\n--- AGREGAR UN PAQUETE ---")
-            nombre_paquete = input("Nombre del paquete: ").strip()
-            descripcion = input("Descripción: ").strip()
-            try:
-                precio = float(input("Precio total: ").strip())
-                fecha_inicio = input("Fecha de inicio (YYYY-MM-DD): ").strip()
-                fecha_fin = input("Fecha de fin (YYYY-MM-DD): ").strip()
-                paquete = Paquete(None, nombre_paquete, descripcion, precio, fecha_inicio, fecha_fin)
-                if paqueteCRUD.agregarPaquete(paquete):
-                    print("Paquete agregado con éxito.")
-                else:
-                    print("No se pudo agregar el paquete. Verifique datos o conexión.")
-            except ValueError:
-                print("Error: El precio debe ser un valor numérico.")
-            input("Presione Enter para continuar...")
-
-        elif opcion == "5":
-            print("\n--- ELIMINAR UN PAQUETE ---")
+            print("\n--- ELIMINAR PAQUETE ---")
             paquetes = paqueteCRUD.mostrarTodos()
+
+            # Si no hay paquetes, no se puede eliminar nada
             if not paquetes:
-                print("No hay paquetes para eliminar.")
+                print("No hay paquetes disponibles para eliminar.")
                 input("Presione Enter para continuar...")
                 continue
-            # Mostrar paquetes disponibles
-            table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] for p in paquetes]
-            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
 
+            # Filtrar paquetes con fechas válidas
+            paquetes_validos = [p for p in paquetes if p['fecha_inicio'] != "0000-00-00" and p['fecha_fin'] != "0000-00-00"]
+
+            if not paquetes_validos:
+                print("No hay paquetes válidos para eliminar.")
+                input("Presione Enter para continuar...")
+                continue
+
+            # Mostrar los paquetes en una tabla
+            table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] 
+                        for p in paquetes_validos]
+            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"], tablefmt="fancy_grid"))
+
+            # Validar el ID del paquete a eliminar
             while True:
-                idPaquete_str = input("Ingrese el ID del paquete a eliminar: ").strip()
-                if not idPaquete_str.isdigit():
+                id_paquete_str = input("Ingrese el ID del paquete a eliminar: ").strip()
+                if not id_paquete_str.isdigit():
                     print("Debe ingresar un número válido.")
                     continue
-                idPaquete = int(idPaquete_str)
-                paquete_existente = next((p for p in paquetes if p['id_paquete'] == idPaquete), None)
+                id_paquete = int(id_paquete_str)
+                paquete_existente = next((p for p in paquetes_validos if p['id_paquete'] == id_paquete), None)
                 if paquete_existente:
                     break
                 else:
                     print("No se encontró un paquete con ese ID. Intente nuevamente.")
 
-            # Resumen antes de eliminar
+            # Mostrar resumen antes de confirmar
             print("\nResumen del paquete a eliminar:")
             print(f"ID: {paquete_existente['id_paquete']}")
             print(f"Nombre: {paquete_existente['nombre_paquete']}")
@@ -432,16 +442,17 @@ def menuPaquetes(nombre):
             print(f"Fecha Inicio: {paquete_existente['fecha_inicio']}")
             print(f"Fecha Fin: {paquete_existente['fecha_fin']}")
 
+            # Confirmar eliminación
             while True:
                 confirmar = input("¿Confirmar eliminación? [SI/NO]: ").strip().lower()
                 if not confirmar:
                     print("La respuesta no puede estar vacía. Debes responder SI o NO.")
                     continue
                 if confirmar == "si":
-                    if paqueteCRUD.eliminarPaquete(idPaquete):
-                        print("Paquete eliminado correctamente.")
+                    if paqueteCRUD.eliminarPaquete(id_paquete):
+                        print("Paquete eliminado con éxito.")
                     else:
-                        print("Error al eliminar el paquete. Verifique el ID.")
+                        print("No se pudo eliminar el paquete. Verifique el ID o la conexión.")
                     break
                 elif confirmar == "no":
                     print("Eliminación descartada.")
@@ -451,100 +462,41 @@ def menuPaquetes(nombre):
 
             input("Presione Enter para continuar...")
 
-        elif opcion == "6":
+
+        elif opcion == "5":
             print("\n--- ACTUALIZAR PAQUETE ---")
             paquetes = paqueteCRUD.mostrarTodos()
-            if not paquetes:
-                print("No hay paquetes para actualizar.")
+            paquetes_validos = [p for p in paquetes if p['fecha_inicio'] != "0000-00-00"]
+
+            if not paquetes_validos:
+                print("No hay paquetes válidos para actualizar.")
                 input("Presione Enter para continuar...")
                 continue
 
-            # Mostrar todos los paquetes
-            table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] for p in paquetes]
-            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
+            table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'],
+                           p['fecha_inicio'], p['fecha_fin']] for p in paquetes_validos]
+            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Inicio", "Fin"],
+                           tablefmt="fancy_grid"))
 
-            # Validar ID del paquete a actualizar
-            while True:
-                idPaquete_str = input("Ingrese el ID del paquete a actualizar: ").strip()
-                if not idPaquete_str.isdigit():
-                    print("Debe ingresar un número válido.")
-                    continue
-                idPaquete = int(idPaquete_str)
-                paquete_existente = next((p for p in paquetes if p['id_paquete'] == idPaquete), None)
-                if paquete_existente:
-                    break
-                else:
-                    print("No se encontró un paquete con ese ID. Intente nuevamente.")
-
-            # Solicitar nuevos datos, sin permitir campos vacíos
-            while True:
-                nuevo_nombre = input("Nuevo nombre: ").strip()
-                if nuevo_nombre:
-                    break
-                else:
-                    print("El nombre no puede estar vacío.")
-
-            while True:
-                nueva_descripcion = input("Nueva descripción: ").strip()
-                if nueva_descripcion:
-                    break
-                else:
-                    print("La descripción no puede estar vacía.")
-
-            while True:
-                nuevo_precio_str = input("Nuevo precio: ").strip()
-                if not nuevo_precio_str:
-                    print("El precio no puede estar vacío.")
-                    continue
-                try:
-                    nuevo_precio = float(nuevo_precio_str)
-                    break
-                except ValueError:
-                    print("El precio debe ser numérico.")
-
+            idPaquete = input("Ingrese el ID del paquete a actualizar: ").strip()
+            nuevo_nombre = input("Nuevo nombre del paquete: ").strip()
+            nueva_descripcion = input("Nueva descripción: ").strip()
+            nuevo_precio = float(input("Nuevo precio: ").strip())
             nueva_fecha_inicio = input("Nueva fecha de inicio (YYYY-MM-DD): ").strip()
-            while not nueva_fecha_inicio:
-                print("La fecha de inicio no puede estar vacía.")
-                nueva_fecha_inicio = input("Nueva fecha de inicio (YYYY-MM-DD): ").strip()
-
             nueva_fecha_fin = input("Nueva fecha de fin (YYYY-MM-DD): ").strip()
-            while not nueva_fecha_fin:
-                print("La fecha de fin no puede estar vacía.")
-                nueva_fecha_fin = input("Nueva fecha de fin (YYYY-MM-DD): ").strip()
 
-            # Mostrar resumen de cambios
-            print("\nResumen de cambios:")
-            print(f"Nombre: {paquete_existente['nombre_paquete']} -> {nuevo_nombre}")
-            print(f"Descripción: {paquete_existente['descripcion']} -> {nueva_descripcion}")
-            print(f"Precio: {paquete_existente['precio_total']} -> {nuevo_precio}")
-            print(f"Fecha Inicio: {paquete_existente['fecha_inicio']} -> {nueva_fecha_inicio}")
-            print(f"Fecha Fin: {paquete_existente['fecha_fin']} -> {nueva_fecha_fin}")
-
-            # Confirmar cambios
-            while True:
-                confirmar = input("¿Confirmar cambios? [SI/NO]: ").strip().lower()
-                if not confirmar:
-                    print("La respuesta no puede estar vacía. Debes responder SI o NO.")
-                    continue
-                if confirmar == "si":
-                    if paqueteCRUD.modificarPaquete(idPaquete, nuevo_nombre, nueva_descripcion, nuevo_precio, nueva_fecha_inicio, nueva_fecha_fin):
-                        print("Cambios guardados con éxito.")
-                    else:
-                        print("No se pudieron guardar los cambios. Verifique el ID o la conexión.")
-                    break
-                elif confirmar == "no":
-                    print("Cambios descartados.")
-                    break
-                else:
-                    print("Entrada no válida. Debes responder 'SI' o 'NO'.")
-
+            if paqueteCRUD.modificarPaquete(idPaquete, nuevo_nombre, nueva_descripcion, nuevo_precio,
+                                            nueva_fecha_inicio, nueva_fecha_fin):
+                print("Paquete actualizado correctamente.")
+            else:
+                print("Error al actualizar el paquete.")
             input("Presione Enter para continuar...")
 
-        elif opcion == "7":
+        elif opcion == "6":
             print("\n--- GENERAR PAQUETES ALEATORIOS ---")
             generarPaquetesAleatorios()
 
-        elif opcion == "8":
+        elif opcion == "7":
             print("\nRegresando al menú principal...")
             input("Presione Enter para continuar...")
             break
