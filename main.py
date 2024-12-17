@@ -182,40 +182,39 @@ def menuDestinos():
             titulo_submenu = [["REGISTRAR UN NUEVO DESTINO"]]
             print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
             
-            # Campos de entrada organizados en una tabla
-            campos = [
-                ["Nombre:", ""],
-                ["Descripción:", ""],
-                ["Actividades:", ""],
-                ["Costo:", ""]
-            ]
-            print(tabulate(campos, tablefmt="plain", colalign=("left", "left")))
-            
-            # Captura de entradas del usuario
-            nombre = input(">> ").strip()
-            descripcion = input(">> ").strip()
-            actividades = input(">> ").strip()
-            
+            # Captura de entradas del usuario con validación
+            while True:
+                nombre = input("Ingrese Nombre del destino: ").strip()
+                if nombre:
+                    break
+                print(tabulate([["[Error]"], ["El nombre del destino no puede estar vacío."]], tablefmt="fancy_grid"))
+
+            while True:
+                descripcion = input("Ingrese Descripción: ").strip()
+                if descripcion:
+                    break
+                print(tabulate([["[Error]"], ["La descripción no puede estar vacía."]], tablefmt="fancy_grid"))
+
+            while True:
+                actividades = input("Ingrese Actividades: ").strip()
+                if actividades:
+                    break
+                print(tabulate([["[Error]"], ["Las actividades no pueden estar vacías."]], tablefmt="fancy_grid"))
+
             # Validación del costo
             while True:
-                print("\nCosto:")
-                costo_str = input(">> ").strip()
+                costo_str = input("Ingrese Costo: ").strip()
                 if not costo_str:
-                    error_msg = [
-                        ["[Error]"],
-                        ["El costo no puede estar vacío."]
-                    ]
-                    print(tabulate(error_msg, tablefmt="fancy_grid", stralign="center"))
+                    print(tabulate([["[Error]"], ["El costo no puede estar vacío."]], tablefmt="fancy_grid"))
                     continue
                 try:
                     costo = int(costo_str)
-                    break
+                    if costo >= 0:  # Validar que el costo sea positivo
+                        break
+                    else:
+                        print(tabulate([["[Error]"], ["El costo debe ser un número positivo."]], tablefmt="fancy_grid"))
                 except ValueError:
-                    error_msg = [
-                        ["[Error]"],
-                        ["El costo debe ser numérico."]
-                    ]
-                    print(tabulate(error_msg, tablefmt="fancy_grid", stralign="center"))
+                    print(tabulate([["[Error]"], ["El costo debe ser numérico."]], tablefmt="fancy_grid"))
             
             # Crear objeto Destino y agregarlo mediante CRUD
             destino = Destino(nombre, descripcion, actividades, costo)
@@ -1066,26 +1065,65 @@ def menuReservas(id_usuario):
                 os.system('cls' if os.name == 'nt' else 'clear')
                 titulo_submenu = [["REALIZAR UNA NUEVA RESERVA"]]
                 print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
-                
+
+                # Mostrar paquetes disponibles
                 paquetes = paqueteCRUD.mostrarTodos()
                 if not paquetes:
                     print(tabulate([["No hay paquetes disponibles."]], tablefmt="fancy_grid", stralign="center"))
                     input("Presione Enter para continuar...")
                     continue
-                
-                table_data = [[p['id_paquete'], p['nombre_paquete'], f"${p['precio_total']:.2f}"] for p in paquetes]
-                print(tabulate(table_data, headers=["ID Paquete", "Nombre", "Precio"], tablefmt="fancy_grid"))
-                
+
+                table_data_paquetes = [[p['id_paquete'], p['nombre_paquete'], f"${p['precio_total']:.2f}"] for p in paquetes]
+                print(tabulate(table_data_paquetes, headers=["ID Paquete", "Nombre", "Precio"], tablefmt="fancy_grid"))
                 id_paquete = input("Ingrese el ID del paquete: ").strip()
-                fecha_reserva = datetime.now().date().strftime("%Y-%m-%d")
-                nueva_reserva = Reserva(id_usuario, id_paquete, fecha_reserva)
-                
-                if reservaCRUD.agregarReserva(nueva_reserva):
-                    print(tabulate([["¡Éxito!"], ["Reserva confirmada con éxito."]], tablefmt="fancy_grid", stralign="center"))
-                else:
-                    print(tabulate([["[Error]"], ["No se pudo realizar la reserva."]], tablefmt="fancy_grid", stralign="center"))
-                
-                input("Presione Enter para continuar...")
+
+                # Mostrar usuarios disponibles
+                print("\nUsuarios disponibles:")
+                usuarios = usuarioCRUD.mostrarTodos()  # Se asume que existe una función para mostrar usuarios
+                if not usuarios:
+                    print(tabulate([["No hay usuarios disponibles."]], tablefmt="fancy_grid", stralign="center"))
+                    input("Presione Enter para continuar...")
+                    continue
+
+                table_data_usuarios = [[u['id_usuario'], u['nombre']] for u in usuarios]
+                print(tabulate(table_data_usuarios, headers=["ID Usuario", "Nombre"], tablefmt="fancy_grid"))
+                id_usuario = input("Ingrese el ID del usuario: ").strip()
+
+                # Mostrar resumen de la reserva
+                paquete_seleccionado = next((p for p in paquetes if str(p['id_paquete']) == id_paquete), None)
+                usuario_seleccionado = next((u for u in usuarios if str(u['id_usuario']) == id_usuario), None)
+
+                if not paquete_seleccionado or not usuario_seleccionado:
+                    print(tabulate([["[Error]"], ["ID de paquete o usuario no válido."]], tablefmt="fancy_grid", stralign="center"))
+                    input("Presione Enter para continuar...")
+                    continue
+
+                resumen_reserva = [
+                    ["Usuario:", f"{usuario_seleccionado['nombre']} (ID: {id_usuario})"],
+                    ["Paquete:", f"{paquete_seleccionado['nombre_paquete']} (ID: {id_paquete})"],
+                    ["Precio:", f"${paquete_seleccionado['precio_total']:.2f}"],
+                    ["Fecha de Reserva:", datetime.now().strftime("%d-%m-%Y")],
+                ]
+                print("\nResumen de la reserva:")
+                print(tabulate(resumen_reserva, tablefmt="fancy_grid"))
+
+                while True:
+                    confirmacion = input("¿Confirmar la reserva? (s/n): ").strip().lower()
+                    if confirmacion == 's':
+                        fecha_reserva = datetime.now().strftime("%d-%m-%Y")
+                        nueva_reserva = Reserva(id_usuario, id_paquete, fecha_reserva)
+
+                        if reservaCRUD.agregarReserva(nueva_reserva):
+                            print(tabulate([["¡Éxito!"], ["Reserva confirmada con éxito."]], tablefmt="fancy_grid", stralign="center"))
+                        else:
+                            print(tabulate([["[Error]"], ["No se pudo realizar la reserva."]], tablefmt="fancy_grid", stralign="center"))
+                        break  # Sale del bucle después de una respuesta válida ('s')
+                    elif confirmacion == 'n':
+                        print(tabulate([["Operación cancelada."]], tablefmt="fancy_grid"))
+                        break  # Sale del bucle después de una respuesta válida ('n')
+                    else:
+                        print(tabulate([["Opción inválida."], ["Por favor ingrese 's' para sí o 'n' para no."]], tablefmt="fancy_grid"))
+
             
             elif opcion == "5":
                 # Cancelar una reserva
