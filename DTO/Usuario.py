@@ -16,13 +16,13 @@ class Usuario:
         try:
             usuario_data = CRUDUsuario.obtenerUsuario(correo)
             if not usuario_data:
-                print("\nError: Correo no registrado. Intente nuevamente.\n")
+                print("\nError: Correo no registrado.\n")
                 return {"autenticado": False, "tipo_usuario": None}
 
             # Comparar contraseña hasheada
             stored_password = usuario_data.get("password")
             if stored_password and bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
-                print("\n¡Inicio de sesión exitoso!\n")
+                print("\n¡Inicio de sesión exitoso!")
                 return {
                     "autenticado": True,
                     "id_usuario": usuario_data.get("id_usuario"),

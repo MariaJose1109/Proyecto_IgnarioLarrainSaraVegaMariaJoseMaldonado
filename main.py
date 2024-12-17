@@ -8,6 +8,7 @@ from DTO.Usuario import *
 from DTO.Destino import Destino
 import os
 import json
+from tabulate import tabulate
 
 
 def registrarUsuario():
@@ -71,227 +72,134 @@ def menuDestinos():
         print("       MENÚ DESTINOS      ")
         print("--------------------------")
         print("1. Registrar un nuevo destino")
-        print("2. Consultar destinos disponibles")
-        print("3. Actualizar destino")
-        print("4. Eliminar destino")
-        print("5. Salir")
-        opcion = input("Por favor, selecciona una opción (1-5): ").strip()
+        print("2. Mostrar todos los destinos")
+        print("3. Mostrar un destino")
+        print("4. Mostrar destinos parciales")
+        print("5. Actualizar destino")
+        print("6. Eliminar destino")
+        print("7. Salir")
+        opcion = input("Por favor, selecciona una opción (1-7): ").strip()
 
-        if opcion == "1":
-            print("\n--- REGISTRAR UN NUEVO DESTINO ---")
-            nombre = input("Ingrese el nombre del destino: ").strip()
-            descripcion = input("Ingrese la descripción del destino: ").strip()
-            actividades = input("Ingrese las actividades disponibles en el destino: ").strip()
-            try:
-                costo = int(input("Ingrese el costo aproximado para visitar el destino (en $): ").strip())
-                nuevoDestino = Destino(nombre, descripcion, actividades, costo)
-                agregarDestino(nuevoDestino)
-                print(f"¡Destino {nombre} registrado exitosamente!")
-            except ValueError:
-                print("Por favor, ingresa un valor numérico válido para el costo.")
-
-        elif opcion == "2":
-            print("\n--- CONSULTAR DESTINOS DISPONIBLES ---")
+        if opcion == "2":
+            print("\n--- MOSTRAR TODOS LOS DESTINOS ---")
             destinos = consultarDestinos()
             if destinos:
-                print("Destinos disponibles:")
                 for destino in destinos:
                     print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
             else:
-                print("No se encontraron destinos registrados en este momento.")
-
+                print("No hay destinos disponibles.")
         elif opcion == "3":
-            print("\n--- ACTUALIZAR UN DESTINO EXISTENTE ---")
-            idDestino = input("Ingrese el ID del destino que desea actualizar: ").strip()
-            nuevoNombre = input("Ingrese el nuevo nombre del destino: ").strip()
-            nuevaDescripcion = input("Ingrese la nueva descripción del destino: ").strip()
-            nuevaActividad = input("Ingrese la nueva actividad disponible: ").strip()
-            try:
-                nuevoCosto = int(input("Ingrese el nuevo precio aproximado para el destino (en $): ").strip())
-                actualizarDestino(destino_id, nuevoNombre, nuevaActividad, nuevaDescripcion, nuevoCosto) 
-                print(f"¡Destino con ID {idDestino} actualizado correctamente!")
-            except ValueError:
-                print("Por favor, ingresa un valor numérico válido para el costo.")            
-        elif opcion == "4":
-            print("\n--- ELIMINAR UN DESTINO ---")
-            idDestino = input("Ingrese el ID del destino que desea eliminar: ").strip()
-            if eliminarDestino(idDestino): 
-                print(f"Destino con ID {idDestino} eliminado correctamente.")
+            print("\n--- MOSTRAR UN DESTINO ---")
+            idDestino = input("Ingrese el ID del destino: ").strip()
+            destino = consultarDestinoPorId(idDestino)
+            if destino:
+                print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
             else:
-                print(f"No se pudo eliminar el destino con ID {idDestino}.")
-        elif opcion == "5":
-            print("¡Gracias por usar el sistema de gestión de destinos! Saliendo...")
-            break            
-
+                print("Destino no encontrado.")
+        elif opcion == "4":
+            print("\n--- MOSTRAR DESTINOS PARCIALES ---")
+            filtro = input("Ingrese parte del nombre del destino: ").strip()
+            destinos = consultarDestinosParciales(filtro)
+            if destinos:
+                for destino in destinos:
+                    print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
+            else:
+                print("No se encontraron coincidencias.")
+        elif opcion == "7":
+            break
         else:
-            print("Opción no válida. Por favor, selecciona una opción entre 1 y 5.")
+            print("Opción no válida. Intente nuevamente.")
 
 def menuPaquetes(nombre):
     while True:
-        print("---------------------------")
-        print("  MENÚ PAQUETES TURÍSTICOS ")
-        print("---------------------------")
-        print("1. Registrar Paquete Turístico")
-        print("2. Consultar Paquetes Turísticos")
-        print("3. Actualizar Paquete Turístico")
-        print("4. Eliminar Paquete Turístico")
-        print("5. Salir")
-        opcion = input("Por favor, selecciona una opción (1-5): ").strip()
-
+        print("\n============================")
+        print("    MENÚ PAQUETES TURÍSTICOS   ")
+        print("============================")
+        print("1. Mostrar todos los paquetes")
+        print("2. Mostrar un paquete")
+        print("3. Mostrar paquetes parciales")
+        print("4. Actualizar paquete")
+        print("5. Eliminar paquete")
+        print("6. Salir")
+        opcion = input("Seleccione una opción: ").strip()
+        
         if opcion == "1":
-            print("\n--- REGISTRAR UN NUEVO PAQUETE TURÍSTICO ---")
-            # Consultar destinos disponibles
-            destinos = consultarDestinos()
-            if not destinos:
-                print("Lo sentimos, no hay destinos disponibles para crear paquetes turísticos en este momento.")
-                continue
-            # Mostrar destinos al usuario
-            print("Destinos disponibles para incluir en el paquete:")
-            for destino in destinos:
-                print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
-            # Pedir destinos al usuario para crear el paquete
-            destinosSeleccionados = input("Ingrese los IDs de los destinos a incluir en el paquete, separados por comas: ").strip()
-            try:
-                idsDestinos = [int(id.strip()) for id in destinosSeleccionados.split(",") if id.strip().isdigit()]
-                destinosValidos = [destino for destino in destinos if destino["id_destino"] in idsDestinos]
-                if not destinosValidos:
-                    print("No se seleccionaron destinos válidos. Por favor, intente nuevamente.")
-                    continue
-                # Calcular el costo total del paquete
-                costo = sum(destino["costo"] for destino in destinosValidos)
-                # Solicitar información del paquete
-                nombre = input("Ingrese el nombre del paquete turístico: ").strip()
-                descripcion = input("Ingrese la descripción del paquete: ").strip()
-                fechaIda = input("Ingrese la fecha de inicio del paquete (YYYY-MM-DD): ").strip()
-                fechaVuelta = input("Ingrese la fecha de fin del paquete (YYYY-MM-DD): ").strip()
-                # Crear objeto PaqueteTuristico
-                nuevoPaquete = PaqueteTuristico(nombre, descripcion, costo, fechaIda, fechaVuelta)                
-                # Registrar el paquete
-                if nuevoPaquete.registrarPaquete(destinosValidos):
-                    print(f"¡Paquete registrado con éxito! ID del paquete: {nuevoPaquete.idPaquete}")
-                else:
-                    print("Hubo un problema al registrar el paquete turístico. Intenta nuevamente.")
-            except ValueError as e:
-                print(f"Error en la entrada de datos: {e}. Por favor, revisa la información e inténtalo nuevamente.")
+            print("\n--- MOSTRAR TODOS LOS PAQUETES ---")
+            Paquete.consultarPaquetes()
         elif opcion == "2":
-            print("\n--- CONSULTAR PAQUETES TURÍSTICOS ---")
-            PaqueteTuristico.consultarPaquetes()     
-        elif opcion == "3":
-            try:
-                print("\n--- PAQUETES TURÍSTICOS DISPONIBLES ---")
-                PaqueteTuristico.consultarPaquetes()
-                idPaquete = int(input("Ingrese el ID del paquete que desea actualizar: ").strip())
-                nuevoNombre = input("Ingrese el nuevo nombre del paquete: ").strip()
-                nuevaDescripcion = input("Ingrese la nueva descripción del paquete: ").strip()
-                consultarDestinos()
-                idDestino = int(input("Ingrese el ID del destino asociado al paquete: ").strip())
-                nuevaFechaIda = input("Ingrese la nueva fecha de inicio (YYYY-MM-DD): ").strip()
-                nuevaFechaVuelta = input("Ingrese la nueva fecha de fin (YYYY-MM-DD): ").strip()
-                paquete = PaqueteTuristico(None, None, None, None, None)
-                paquete.idPaquete = idPaquete
-                if paquete.actualizarPaquete(nuevoNombre, nuevaDescripcion, idDestino, nuevaFechaIda, nuevaFechaVuelta):
-                    print("¡Actualización completada con éxito!")
-                else:
-                    print("Hubo un problema al intentar actualizar el paquete. Verifique los datos e intente nuevamente.")
-            except ValueError as e:
-                print(f"Error en la entrada de datos: {e}. Por favor, revisa los valores y vuelve a intentarlo.")
-        
-        elif opcion == "4":
-            PaqueteTuristico.consultarPaquetes()
-            idPaquete = input("Ingrese el ID del paquete que desea eliminar: ").strip()
-            paquete = PaqueteTuristico(None, None, None, None, None)
-            paquete.idPaquete = idPaquete
-            if paquete.eliminarPaquete():
-                print(f"Paquete con ID {idPaquete} eliminado correctamente. ¡Operación exitosa!")
+            print("\n--- MOSTRAR UN PAQUETE ---")
+            idPaquete = input("Ingrese el ID del paquete: ").strip()
+            paquete = Paquete.consultarPaquetePorId(idPaquete)
+            if paquete:
+                print(paquete)
             else:
-                print("Hubo un problema al eliminar el paquete. Asegúrese de que el ID sea correcto.")
-        
-        elif opcion == "5":
-            print("¡Gracias por usar el sistema de gestión de paquetes turísticos! Saliendo...")
+                print("Paquete no encontrado.")
+        elif opcion == "3":
+            print("\n--- MOSTRAR PAQUETES PARCIALES ---")
+            filtro = input("Ingrese parte del nombre del paquete: ").strip()
+            paquetes = Paquete.consultarPaquetesParciales(filtro)
+            if paquetes:
+                for paquete in paquetes:
+                    print(paquete)
+            else:
+                print("No se encontraron coincidencias.")
+        elif opcion == "6":
             break
-
         else:
-            print("Opción no válida. Por favor, ingresa un número entre 1 y 5.")
+            print("Opción no válida.")
 
+# Función para generar paquetes aleatorios
+def menuGenerarPaquetesAleatorios():
+    print("\n--- GENERAR PAQUETES ALEATORIOS ---")
+    try:
+        cantidad = int(input("¿Cuántos paquetes aleatorios desea generar? (1-10): ").strip())
+        if 1 <= cantidad <= 10:
+            print("\nGenerando paquetes aleatorios...\n")
+            for i in range(1, cantidad + 1):
+                paquete = Paquete.generarPaqueteAleatorio()
+                print(f"Paquete #{i}: {paquete}")
+        else:
+            print("Por favor, ingrese un número entre 1 y 10.")
+    except ValueError:
+        print("Entrada inválida. Debe ingresar un número válido.")
 
 def menuReservas(nombre):
     while True:
         print("---------------------------")
         print("         MENÚ RESERVAS     ")
         print("---------------------------")
-        print("1. Consultar todas las reservas")
-        print("2. Realizar una nueva reserva")
-        print("3. Cancelar una reserva")
-        print("4. Confirmar una reserva")
-        print("5. Salir")
-        opcion = input("Por favor, elija una opción (1-5): ").strip()
-        
+        print("1. Mostrar todas las reservas")
+        print("2. Mostrar una reserva")
+        print("3. Mostrar reservas parciales")
+        print("4. Realizar una nueva reserva")
+        print("5. Cancelar una reserva")
+        print("6. Confirmar una reserva")
+        print("7. Salir")
+        opcion = input("Por favor, elija una opción (1-7): ").strip()
+
         if opcion == "1":
+            print("\n--- MOSTRAR TODAS LAS RESERVAS ---")
             reservas = consultarTodosReserva()
-            if reservas:
-                print("\nAquí están las reservas registradas:")
-                for reserva in reservas:
-                    print(f"ID Reserva: {reserva['id_reserva']}, Usuario ID: {reserva['id_usuario']}, Paquete ID: {reserva['id_paquete']}, Fecha de Reserva: {reserva['fecha_reserva']}, Estado: {reserva['estado']}")
-            else:
-                print("No se encontraron reservas registradas en este momento.")
-        
+            for reserva in reservas:
+                print(f"ID: {reserva['id_reserva']}, Usuario ID: {reserva['id_usuario']}, Estado: {reserva['estado']}")
         elif opcion == "2":
-            try:
-                paquetes = consultarPaquetesDisponibles()
-                if paquetes:
-                    print("\n--- Paquetes disponibles ---")
-                    for paquete in paquetes:
-                        print(f"ID Paquete: {paquete['id_paquete']}, Nombre: {paquete['nombre_paquete']}, Descripción: {paquete['descripcion']}, Precio: {paquete['precio_total']}")
-                else:
-                    print("No hay paquetes turísticos disponibles.")
-                    continue 
-                idPaquete = int(input("Ingrese el ID del paquete turístico que desea reservar: "))
-                clientes = consultarUsuariosTipoCliente()  
-                if clientes:
-                    print("\n--- Usuarios tipo Cliente ---")
-                    for cliente in clientes:
-                        print(f"ID Usuario: {cliente['id_usuario']}, Nombre: {cliente['nombre']}")
-                else:
-                    print("No hay usuarios tipo cliente disponibles.")
-                    continue 
-                idUsuario = int(input("Ingrese su ID de usuario para realizar la reserva: "))
-                fechaReserva = input("Por favor, ingrese la fecha de reserva (YYYY-MM-DD): ").strip()
-                nuevaReserva = Reserva(idUsuario, idPaquete, fechaReserva)
-                if nuevaReserva.realizarReserva():
-                    print("¡Tu reserva ha sido registrada con éxito!")
-                else:
-                    print("Lo siento, no pudimos registrar tu reserva en este momento. Intenta nuevamente.")
-            except Exception as e:
-                print(f"Hubo un error al intentar registrar la reserva: {e}")
-        
+            print("\n--- MOSTRAR UNA RESERVA ---")
+            idReserva = input("Ingrese el ID de la reserva: ").strip()
+            reserva = consultarReservaPorId(idReserva)
+            if reserva:
+                print(f"ID: {reserva['id_reserva']}, Usuario ID: {reserva['id_usuario']}, Estado: {reserva['estado']}")
+            else:
+                print("Reserva no encontrada.")
         elif opcion == "3":
-            try:
-                idReserva = int(input("Por favor, ingresa el ID de la reserva que deseas cancelar: "))
-                if cancelarReserva(idReserva):
-                    print("¡Reserva cancelada exitosamente!")
-                else:
-                    print("No fue posible cancelar la reserva. Verifica que el ID sea correcto o que la reserva esté en estado 'pendiente'.")
-            except Exception as e:
-                print(f"Hubo un error al intentar cancelar la reserva: {e}")
-                
-        elif opcion == "4":
-            try:
-                idReserva = input("Ingrese el ID de la reserva que desea confirmar: ").strip()
-                reserva = Reserva(None, None, None)
-                reserva.idReserva = idReserva
-                if reserva.confirmarReserva():
-                    print("¡Reserva confirmada correctamente! ¡Gracias por elegirnos!")
-                else:
-                    print("No se pudo confirmar la reserva. Asegúrese de que el ID sea válido.")
-            except Exception as e:
-                print(f"Hubo un error al intentar confirmar la reserva: {e}")
-        
-        elif opcion == "5":
-            print("¡Gracias por usar nuestro sistema! Saliendo del menú de reservas...")
+            print("\n--- MOSTRAR RESERVAS PARCIALES ---")
+            estado = input("Ingrese el estado de la reserva (pendiente, confirmada, etc.): ").strip()
+            reservas = consultarReservasParciales(estado)
+            for reserva in reservas:
+                print(f"ID: {reserva['id_reserva']}, Estado: {reserva['estado']}")
+        elif opcion == "7":
             break
-        
         else:
-            print("Opción no válida. Por favor, ingrese un número entre 1 y 5.")
+            print("Opción no válida. Intente nuevamente.")
 
 
 def main():
@@ -329,7 +237,6 @@ def main():
 def menuAdmin(nombre, idUsuario):
     while True:
         #os.system('cls') 
-        print(f"Bienvenido, Administrador: {nombre}")
         print("---------------------------")
         print("       MENÚ ADMIN         ")
         print("---------------------------")
@@ -355,7 +262,7 @@ def menuAdmin(nombre, idUsuario):
 def menuClientes(nombre, idUsuario):  # Ahora también pasamos 'id_usuario'
     while True:
         print("--------------------------")
-        print(f"       MENÚ CLIENTE - {nombre}")
+        print(f"       MENÚ CLIENTE")
         print("--------------------------")
         print("1. Consultar Paquetes Turísticos")
         print("2. Realizar Reserva")
@@ -365,11 +272,11 @@ def menuClientes(nombre, idUsuario):  # Ahora también pasamos 'id_usuario'
         opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
-                PaqueteTuristico.consultarPaquetes() 
+                Paquete.consultarPaquetes() 
         elif opcion == "2":
             try:
                 # Mostrar paquetes disponibles
-                PaqueteTuristico.consultarPaquetes() 
+                Paquete.consultarPaquetes() 
                 idPaquete = int(input("Ingrese el ID del paquete turístico que desea reservar: "))
                 fechaReserva = input("Por favor, ingrese la fecha de reserva (YYYY-MM-DD): ").strip()
                 # Crear reserva con el id_usuario logeado

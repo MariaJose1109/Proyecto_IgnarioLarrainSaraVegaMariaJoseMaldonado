@@ -1,89 +1,65 @@
-from DAO.CRUDPaquete import *
-from datetime import datetime
+from DAO.CRUDDestino import *  
+from DAO.CRUDPaquete import *  
+from datetime import datetime, timedelta
+import random
 
 class Paquete:
-    def __init__(self, nombre, descripcion, fechaIda, fechaVuelta, costo, idPaquete=None):
-        self.idPaquete = idPaquete  # Se asignará después de registrarse en la base de datos
+    def __init__(self, nombre, descripcion, fecha_inicio, fecha_fin, precio_total):
+        self.id_paquete = None
         self.nombre = nombre
         self.descripcion = descripcion
-        self.fechaIda = fechaIda  # Fecha de inicio
-        self.fechaVuelta = fechaVuelta  # Fecha de finalización
-        self.costo = costo
+        self.fecha_inicio = fecha_inicio
+        self.fecha_fin = fecha_fin
+        self.precio_total = precio_total
+        self.destinos = []
 
-    def calcularCosto(self):
-        """
-        Simula el cálculo del costo en función de los destinos asociados o algún otro criterio.
-        Aquí retorna el costo ya registrado.
-        """
-        return self.costo
-
-    def registrarPaquete(self, destinos_validos):
-        """
-        Registra el paquete turístico en la base de datos junto con los destinos asociados.
-        """
-        if agregarPaqueteConDestino(self, destinos_validos):
-            print(f"Paquete '{self.nombre}' registrado con éxito.")
-            return True
-        else:
-            print("Error al registrar el paquete.")
-            return False
-
-    def actualizarPaquete(self, nuevoNombre, nuevaDescripcion, idDestino, nuevaFechaIda, nuevaFechaVuelta):
-        """
-        Actualiza los datos del paquete turístico en la base de datos.
-        """
-        if actualizarPaqueteConDestino(self.idPaquete, nuevoNombre, nuevaDescripcion, idDestino, nuevaFechaIda, nuevaFechaVuelta):
-            print(f"Paquete con ID {self.idPaquete} actualizado correctamente.")
-            return True
-        else:
-            print("Error al actualizar el paquete.")
-            return False
-
-    def eliminarPaquete(self):
-        """
-        Elimina el paquete turístico de la base de datos.
-        """
-        if eliminarPaquete(self.idPaquete):
-            print(f"Paquete con ID {self.idPaquete} eliminado correctamente.")
-            return True
-        else:
-            print("Error al eliminar el paquete.")
-            return False
+    def __str__(self):
+        return (f"Paquete(ID: {self.id_paquete}, Nombre: {self.nombre}, Precio: {self.precio_total}, "
+                f"Fechas: {self.fecha_inicio} a {self.fecha_fin}, Destinos: {len(self.destinos)} destinos)")
 
     @staticmethod
-    def consultarPaquetes():
-        """
-        Muestra todos los paquetes turísticos disponibles.
-        """
-        paquetes = DAO.CRUDPaquete.mostrarTodos()
-        if paquetes:
-            print("\n--- LISTA DE PAQUETES TURÍSTICOS ---\n")
-            print(f"{'ID':<5} {'Nombre':<25} {'Descripción':<35} {'Costo':<10} {'Fecha Inicio':<12} {'Fecha Fin':<12}")
-            print("-" * 100)
-            for paquete in paquetes:
-                print(f"{paquete['id_paquete']:<5} "
-                      f"{paquete['nombre_paquete']:<25} "
-                      f"{paquete['descripcion'][:35]:<35} "
-                      f"${paquete['precio_total']:<10} "
-                      f"{paquete['fecha_inicio']:<12} "
-                      f"{paquete['fecha_fin']:<12}")
-            print("-" * 100)
-        else:
-            print("No hay paquetes turísticos disponibles.")
+    def generarPaqueteAleatorio():
+        try:
+            # Obtener destinos de la base de datos
+            destinos_disponibles = consultarDestinos()
+            if not destinos_disponibles:
+                print("No hay destinos disponibles para generar paquetes.")
+                return None
 
-    @staticmethod
-    def consultarUnPaquete(idPaquete):
-        """
-        Consulta un paquete turístico específico por su ID.
-        """
-        paquete = DAO.CRUDPaquete.mostrarUno(idPaquete)
-        if paquete:
-            print("\n--- DETALLE DEL PAQUETE TURÍSTICO ---\n")
-            print(f"ID: {paquete['id_paquete']}")
-            print(f"Nombre: {paquete['nombre_paquete']}")
-            print(f"Descripción: {paquete['descripcion']}")
-            print(f"Costo: ${paquete['precio_total']}")
-            print(f"Fecha de Inicio: {paquete['fecha_inicio']}")
-            print(f"Fecha de Fin: {paquete['fecha_fin']}")
-        else:
-            print(f"No se encontró un paquete con el ID {idPaquete}.")
+            # Seleccionar aleatoriamente entre 2 y 5 destinos
+            cantidad_destinos = random.randint(2, 5)
+            destinos_seleccionados = random.sample(destinos_disponibles, cantidad_destinos)
+
+            # Generar fechas aleatorias (rango de fechas válido)
+            hoy = datetime.now()
+            fecha_inicio = hoy + timedelta(days=random.randint(10, 60))  # Fecha entre 10 y 60 días desde hoy
+            fecha_fin = fecha_inicio + timedelta(days=random.randint(3, 10))  # Duración del viaje entre 3 y 10 días
+
+            # Calcular precio total sumando costos de destinos
+            precio_total = sum(destino["costo"] for destino in destinos_seleccionados)
+
+            # Crear una descripción aleatoria
+            descripcion = f"Paquete con {cantidad_destinos} destinos increíbles, para disfrutar desde el {fecha_inicio.date()} hasta el {fecha_fin.date()}."
+
+            # Crear el objeto Paquete
+            nombre_paquete = f"Paquete-{random.randint(1000, 9999)}"
+            nuevo_paquete = Paquete(
+                nombre=nombre_paquete,
+                descripcion=descripcion,
+                fecha_inicio=fecha_inicio.date(),
+                fecha_fin=fecha_fin.date(),
+                precio_total=precio_total
+            )
+            nuevo_paquete.destinos = destinos_seleccionados
+
+            # Insertar el paquete en la base de datos
+            if agregarPaqueteConDestino(nuevo_paquete, destinos_seleccionados):
+                print(f"Paquete '{nombre_paquete}' generado y registrado exitosamente.")
+                return nuevo_paquete
+            else:
+                print("Error al registrar el paquete en la base de datos.")
+                return None
+
+        except Exception as e:
+            print(f"Error al generar paquete aleatorio: {e}")
+            return None
