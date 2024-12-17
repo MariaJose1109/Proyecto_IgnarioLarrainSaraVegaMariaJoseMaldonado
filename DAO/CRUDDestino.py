@@ -16,11 +16,13 @@ def agregarDestino(destino):
         con.ejecutaQuery(sql, (destino.nombre, destino.descripcion, destino.actividades, destino.costo))
         con.commit()
         return True
-    except Exception:
+    except Exception as e:
         con.rollback()
+        print("Error interno en agregarDestino:", e)  # Temporal, para debug
         return False
     finally:
         con.desconectar()
+
 
 # Mostrar todos los destinos
 def mostrarTodos():

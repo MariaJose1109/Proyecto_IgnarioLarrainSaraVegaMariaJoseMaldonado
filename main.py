@@ -239,11 +239,57 @@ def menuDestinos():
 
         elif opcion == "6":
             print("\n--- ELIMINAR DESTINO ---")
-            id_destino = input("ID del destino a eliminar: ").strip()
-            if destinoCRUD.eliminarDestino(id_destino):
-                print("Destino eliminado con éxito.")
-            else:
-                print("No se pudo eliminar el destino. Verifique el ID.")
+            destinos = destinoCRUD.mostrarTodos()
+
+            # Si no hay destinos, no se puede eliminar nada.
+            if not destinos:
+                print("No hay destinos disponibles para eliminar.")
+                input("Presione Enter para continuar...")
+                continue
+
+            # Mostrar los destinos en una tabla
+            table_data = [[d['id_destino'], d['nombre'], d['descripcion'], d['actividades'], d['costo']] for d in destinos]
+            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Actividades", "Costo"], tablefmt="fancy_grid"))
+
+            # Validar el ID del destino a eliminar
+            while True:
+                id_destino_str = input("Ingrese el ID del destino a eliminar: ").strip()
+                if not id_destino_str.isdigit():
+                    print("Debe ingresar un número válido.")
+                    continue
+                id_destino = int(id_destino_str)
+                destino_existente = next((d for d in destinos if d['id_destino'] == id_destino), None)
+                if destino_existente:
+                    break
+                else:
+                    print("No se encontró un destino con ese ID. Intente nuevamente.")
+
+            # Mostrar resumen antes de confirmar
+            print("\nResumen del destino a eliminar:")
+            print(f"ID: {destino_existente['id_destino']}")
+            print(f"Nombre: {destino_existente['nombre']}")
+            print(f"Descripción: {destino_existente['descripcion']}")
+            print(f"Actividades: {destino_existente['actividades']}")
+            print(f"Costo: {destino_existente['costo']}")
+
+            # Confirmar eliminación
+            while True:
+                confirmar = input("¿Confirmar eliminación? [SI/NO]: ").strip().lower()
+                if not confirmar:
+                    print("La respuesta no puede estar vacía. Debes responder SI o NO.")
+                    continue
+                if confirmar == "si":
+                    if destinoCRUD.eliminarDestino(id_destino):
+                        print("Destino eliminado con éxito.")
+                    else:
+                        print("No se pudo eliminar el destino. Verifique el ID o la conexión.")
+                    break
+                elif confirmar == "no":
+                    print("Eliminación descartada.")
+                    break
+                else:
+                    print("Entrada no válida. Debes responder 'SI' o 'NO'.")
+
             input("Presione Enter para continuar...")
 
         elif opcion == "7":
