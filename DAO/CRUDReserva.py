@@ -1,4 +1,5 @@
 from DAO.Conexion import Conexion
+from datetime import datetime
 
 # Datos de conexión
 host = 'localhost'
@@ -12,6 +13,9 @@ def agregarReserva(reserva):
     Inserta una nueva reserva en la base de datos.
     """
     try:
+        # Convertir la fecha al formato YYYY-MM-DD
+        fecha_reserva = datetime.strptime(reserva.fechaReserva, "%d-%m-%Y").strftime("%Y-%m-%d")
+        
         con = Conexion(host, user, password, db)
         if reserva.estado not in ['pendiente', 'confirmada', 'cancelada']:
             raise ValueError(f"Estado inválido: {reserva.estado}")
@@ -20,16 +24,20 @@ def agregarReserva(reserva):
         INSERT INTO reserva (id_usuario, id_paquete, fecha_reserva, estado)
         VALUES (%s, %s, %s, %s)
         """
-        con.ejecutaQuery(sql, (reserva.idUsuario, reserva.idPaquete, reserva.fechaReserva, reserva.estado))
+        con.ejecutaQuery(sql, (reserva.idUsuario, reserva.idPaquete, fecha_reserva, reserva.estado))
         con.commit()
         print("Reserva registrada con éxito.")
         return True
+    except ValueError:
+        print("Error: La fecha debe estar en el formato DD-MM-YYYY.")
+        return False
     except Exception as e:
         con.rollback()
         print(f"Error al realizar la reserva: {e}")
         return False
     finally:
-        con.desconectar()
+        if con:
+            con.desconectar()
 
 # Consultar todas las reservas
 def mostrarTodos():
@@ -149,14 +157,18 @@ def mostrarReservaPorId(id_usuario):
     try:
         con = Conexion(host, user, password, db)
         sql = """
-        SELECT r.id_reserva, r.id_paquete, r.fecha_reserva, r.estado
+        SELECT r.id_reserva, r.id_paquete, 
+               IF(r.fecha_reserva = '0000-00-00', 'Fecha no válida', r.fecha_reserva) AS fecha_reserva, 
+               r.estado
         FROM reserva r
         WHERE r.id_usuario = %s
         """
         cursor = con.ejecutaQuery(sql, (id_usuario,))
-        return cursor.fetchall()
+        reservas = cursor.fetchall()
+        return reservas
     except Exception as e:
         print(f"Error al consultar las reservas del usuario {id_usuario}: {e}")
         return []
     finally:
-        con.desconectar()
+        if con:
+            con.desconectar()
