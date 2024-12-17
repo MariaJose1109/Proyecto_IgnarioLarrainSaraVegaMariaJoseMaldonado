@@ -27,13 +27,13 @@ def agregarDestino(destino):
 def mostrarTodos():
     try:
         con = Conexion(host, user, password, db)
-        sql = "SELECT * FROM destino"
+        sql = "SELECT id_destino, nombre, descripcion, actividades, costo FROM destino"
         cursor = con.ejecutaQuery(sql)
         datos = cursor.fetchall()
         if datos:
             print("Destinos encontrados:")
-            for dato in datos:
-                print(dato)
+            for destino in datos:
+                print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Descripción: {destino['descripcion']}, Actividades: {destino['actividades']}, Costo: ${destino['costo']}")
         else:
             print("No hay destinos registrados.")
         return datos

@@ -1,7 +1,7 @@
-from DAO.CRUDDestino import *
-from DAO.CRUDUsuario import *
-from DAO.CRUDPaquete import *
-from DAO.CRUDReserva import *
+import DAO.CRUDUsuario
+import DAO.CRUDReserva
+import DAO.CRUDDestino
+import DAO.CRUDPaquete
 from DTO.Paquete import * 
 from DTO.Reserva import * 
 from DTO.Usuario import * 
@@ -80,35 +80,75 @@ def menuDestinos():
         print("7. Salir")
         opcion = input("Por favor, selecciona una opción (1-7): ").strip()
 
-        if opcion == "2":
+        if opcion == "1":
+            print("\n--- REGISTRAR UN NUEVO DESTINO ---")
+            nombre = input("Nombre: ").strip()
+            descripcion = input("Descripción: ").strip()
+            actividades = input("Actividades: ").strip()
+            try:
+                costo = int(input("Costo: ").strip())
+                destino = Destino(None, nombre, descripcion, actividades, costo)
+                if agregarDestino(destino):
+                    print("Destino registrado con éxito.")
+            except ValueError:
+                print("Error: El costo debe ser numérico.")
+
+        elif opcion == "2":
             print("\n--- MOSTRAR TODOS LOS DESTINOS ---")
-            destinos = consultarDestinos()
+            destinos = DAO.CRUDDestino.mostrarTodos()
             if destinos:
                 for destino in destinos:
-                    print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
+                    print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, "
+                        f"Descripción: {destino['descripcion']}, Actividades: {destino['actividades']}, Costo: ${destino['costo']}")
             else:
                 print("No hay destinos disponibles.")
+
         elif opcion == "3":
             print("\n--- MOSTRAR UN DESTINO ---")
-            idDestino = input("Ingrese el ID del destino: ").strip()
-            destino = consultarDestinoPorId(idDestino)
+            id_destino = input("Ingrese el ID del destino: ").strip()
+            destino = mostrarUno(id_destino)
             if destino:
-                print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
+                print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, "
+                      f"Descripción: {destino['descripcion']}, Actividades: {destino['actividades']}, Costo: ${destino['costo']}")
             else:
                 print("Destino no encontrado.")
+
         elif opcion == "4":
             print("\n--- MOSTRAR DESTINOS PARCIALES ---")
-            filtro = input("Ingrese parte del nombre del destino: ").strip()
-            destinos = consultarDestinosParciales(filtro)
-            if destinos:
+            try:
+                cantidad = int(input("Cantidad de destinos a mostrar: ").strip())
+                destinos = mostrarParcial(cantidad)
                 for destino in destinos:
                     print(f"ID: {destino['id_destino']}, Nombre: {destino['nombre']}, Costo: ${destino['costo']}")
+            except ValueError:
+                print("Error: La cantidad debe ser numérica.")
+
+        elif opcion == "5":
+            print("\n--- ACTUALIZAR DESTINO ---")
+            id_destino = input("ID del destino a actualizar: ").strip()
+            nuevo_nombre = input("Nuevo nombre: ").strip()
+            nueva_descripcion = input("Nueva descripción: ").strip()
+            nuevas_actividades = input("Nuevas actividades: ").strip()
+            try:
+                nuevo_costo = int(input("Nuevo costo: ").strip())
+                if modificarDestino(id_destino, nuevo_nombre, nueva_descripcion, nuevas_actividades, nuevo_costo):
+                    print("Destino actualizado correctamente.")
+            except ValueError:
+                print("Error: El costo debe ser numérico.")
+
+        elif opcion == "6":
+            print("\n--- ELIMINAR DESTINO ---")
+            id_destino = input("ID del destino a eliminar: ").strip()
+            if eliminarDestino(id_destino):
+                print("Destino eliminado con éxito.")
             else:
-                print("No se encontraron coincidencias.")
+                print("No se pudo eliminar el destino.")
+
         elif opcion == "7":
+            print("Saliendo del menú de destinos...")
             break
         else:
-            print("Opción no válida. Intente nuevamente.")
+            print("Opción no válida. Inténtalo de nuevo.")
 
 def menuPaquetes(nombre):
     while True:
@@ -116,37 +156,77 @@ def menuPaquetes(nombre):
         print("    MENÚ PAQUETES TURÍSTICOS   ")
         print("============================")
         print("1. Mostrar todos los paquetes")
-        print("2. Mostrar un paquete")
+        print("2. Mostrar un paquete específico")
         print("3. Mostrar paquetes parciales")
-        print("4. Actualizar paquete")
+        print("4. Agregar paquete")
         print("5. Eliminar paquete")
         print("6. Salir")
         opcion = input("Seleccione una opción: ").strip()
-        
+
         if opcion == "1":
+            # Mostrar todos los paquetes turísticos
             print("\n--- MOSTRAR TODOS LOS PAQUETES ---")
-            Paquete.consultarPaquetes()
-        elif opcion == "2":
-            print("\n--- MOSTRAR UN PAQUETE ---")
-            idPaquete = input("Ingrese el ID del paquete: ").strip()
-            paquete = Paquete.consultarPaquetePorId(idPaquete)
-            if paquete:
-                print(paquete)
-            else:
-                print("Paquete no encontrado.")
-        elif opcion == "3":
-            print("\n--- MOSTRAR PAQUETES PARCIALES ---")
-            filtro = input("Ingrese parte del nombre del paquete: ").strip()
-            paquetes = Paquete.consultarPaquetesParciales(filtro)
+            paquetes = mostrarTodos()
             if paquetes:
                 for paquete in paquetes:
-                    print(paquete)
+                    print(f"ID: {paquete['id_paquete']}, Nombre: {paquete['nombre_paquete']}, Precio: ${paquete['precio_total']}")
             else:
-                print("No se encontraron coincidencias.")
+                print("No hay paquetes turísticos registrados.")
+
+        elif opcion == "2":
+            # Mostrar un paquete específico
+            print("\n--- MOSTRAR UN PAQUETE ---")
+            idPaquete = input("Ingrese el ID del paquete: ").strip()
+            paquete = mostrarUno(idPaquete)
+            if paquete:
+                print(f"ID: {paquete['id_paquete']}, Nombre: {paquete['nombre_paquete']}, Precio: ${paquete['precio_total']}")
+            else:
+                print("No se encontró un paquete con ese ID.")
+
+        elif opcion == "3":
+            # Mostrar paquetes parciales
+            print("\n--- MOSTRAR PAQUETES PARCIALES ---")
+            try:
+                cantidad = int(input("¿Cuántos paquetes desea mostrar?: ").strip())
+                paquetes = mostrarParcial(cantidad)
+                if paquetes:
+                    for paquete in paquetes:
+                        print(f"ID: {paquete['id_paquete']}, Nombre: {paquete['nombre_paquete']}, Precio: ${paquete['precio_total']}")
+                else:
+                    print("No se encontraron paquetes turísticos para mostrar.")
+            except ValueError:
+                print("Debe ingresar un número válido.")
+
+        elif opcion == "4":
+            # Agregar un paquete
+            print("\n--- AGREGAR UN PAQUETE ---")
+            nombre = input("Nombre del paquete: ").strip()
+            descripcion = input("Descripción: ").strip()
+            try:
+                precio = float(input("Precio total: ").strip())
+                fecha_inicio = input("Fecha de inicio (YYYY-MM-DD): ").strip()
+                fecha_fin = input("Fecha de fin (YYYY-MM-DD): ").strip()
+                paquete = Paquete(None, nombre, descripcion, None, fecha_inicio, fecha_fin)
+                if agregarPaquete(paquete):
+                    print("Paquete agregado con éxito.")
+            except ValueError:
+                print("Error: El precio debe ser un valor numérico.")
+
+        elif opcion == "5":
+            # Eliminar un paquete
+            print("\n--- ELIMINAR UN PAQUETE ---")
+            idPaquete = input("Ingrese el ID del paquete a eliminar: ").strip()
+            if eliminarPaquete(idPaquete):
+                print("Paquete eliminado correctamente.")
+            else:
+                print("Error al eliminar el paquete. Verifique el ID.")
+
         elif opcion == "6":
+            print("\nRegresando al menú principal...")
             break
+
         else:
-            print("Opción no válida.")
+            print("Opción no válida. Intente nuevamente.")
 
 # Función para generar paquetes aleatorios
 def menuGenerarPaquetesAleatorios():
