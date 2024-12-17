@@ -90,14 +90,27 @@ def menuDestinos():
             nombre = input("Nombre: ").strip()
             descripcion = input("Descripción: ").strip()
             actividades = input("Actividades: ").strip()
-            try:
-                costo = int(input("Costo: ").strip())
-                destino = Destino(None, nombre, descripcion, actividades, costo)
-                if destinoCRUD.agregarDestino(destino):
-                    print("Destino registrado con éxito.")
-            except ValueError:
-                print("Error: El costo debe ser numérico.")
+
+            # Validar el costo
+            while True:
+                costo_str = input("Costo: ").strip()
+                if not costo_str:
+                    print("El costo no puede estar vacío.")
+                    continue
+                try:
+                    costo = int(costo_str)
+                    break
+                except ValueError:
+                    print("Error: El costo debe ser numérico.")
+
+            destino = Destino(None, nombre, descripcion, actividades, costo)
+            if destinoCRUD.agregarDestino(destino):
+                print("Destino registrado con éxito.")
+            else:
+                print("Error al registrar el destino. Verifique la conexión o los datos.")
+
             input("Presione Enter para continuar...")
+
 
         elif opcion == "2":
             print("\n--- MOSTRAR TODOS LOS DESTINOS ---")
@@ -138,18 +151,90 @@ def menuDestinos():
 
         elif opcion == "5":
             print("\n--- ACTUALIZAR DESTINO ---")
-            id_destino = input("ID del destino a actualizar: ").strip()
-            nuevo_nombre = input("Nuevo nombre: ").strip()
-            nueva_descripcion = input("Nueva descripción: ").strip()
-            nuevas_actividades = input("Nuevas actividades: ").strip()
-            try:
-                nuevo_costo = int(input("Nuevo costo: ").strip())
-                if destinoCRUD.modificarDestino(id_destino, nuevo_nombre, nueva_descripcion, nuevas_actividades, nuevo_costo):
-                    print("Destino actualizado correctamente.")
+            destinos = destinoCRUD.mostrarTodos()
+            
+            # Si no hay destinos, no podemos actualizar nada
+            if not destinos:
+                print("No hay destinos disponibles para actualizar.")
+                input("Presione Enter para continuar...")
+                continue
+            
+            # Mostrar los destinos en una tabla
+            table_data = [[d['id_destino'], d['nombre'], d['descripcion'], d['actividades'], d['costo']] for d in destinos]
+            print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Actividades", "Costo"], tablefmt="fancy_grid"))
+
+            # Validar el ID de destino a actualizar
+            while True:
+                id_destino_str = input("Ingrese el ID del destino a actualizar: ").strip()
+                if not id_destino_str.isdigit():
+                    print("Debes ingresar un número válido.")
+                    continue
+                id_destino = int(id_destino_str)
+                # Verificar que el ID exista en la lista de destinos
+                destino_existente = next((d for d in destinos if d['id_destino'] == id_destino), None)
+                if destino_existente:
+                    break
                 else:
-                    print("No se pudo actualizar el destino. Verifique el ID.")
-            except ValueError:
-                print("Error: El costo debe ser numérico.")
+                    print("No se encontró un destino con ese ID. Intente nuevamente.")
+
+            # Solicitar nuevos datos, asegurando que no estén vacíos
+            while True:
+                nuevo_nombre = input("Nuevo nombre: ").strip()
+                if nuevo_nombre:
+                    break
+                else:
+                    print("El nombre no puede estar vacío.")
+
+            while True:
+                nueva_descripcion = input("Nueva descripción: ").strip()
+                if nueva_descripcion:
+                    break
+                else:
+                    print("La descripción no puede estar vacía.")
+
+            while True:
+                nuevas_actividades = input("Nuevas actividades: ").strip()
+                if nuevas_actividades:
+                    break
+                else:
+                    print("Las actividades no pueden estar vacías.")
+
+            while True:
+                nuevo_costo_str = input("Nuevo costo: ").strip()
+                if not nuevo_costo_str:
+                    print("El costo no puede estar vacío.")
+                    continue
+                try:
+                    nuevo_costo = int(nuevo_costo_str)
+                    break
+                except ValueError:
+                    print("Error: El costo debe ser numérico.")
+
+            # Mostrar resumen de cambios antes de confirmar
+            print("\nResumen de cambios:")
+            print(f"Nombre: {destino_existente['nombre']} -> {nuevo_nombre}")
+            print(f"Descripción: {destino_existente['descripcion']} -> {nueva_descripcion}")
+            print(f"Actividades: {destino_existente['actividades']} -> {nuevas_actividades}")
+            print(f"Costo: {destino_existente['costo']} -> {nuevo_costo}")
+
+            # Confirmar cambios
+            while True:
+                confirmar = input("¿Confirmar cambios? [SI/NO]: ").strip().lower()
+                if not confirmar:
+                    print("La respuesta no puede estar vacía. Debes responder SI o NO.")
+                    continue
+                if confirmar == "si":
+                    if destinoCRUD.modificarDestino(id_destino, nuevo_nombre, nueva_descripcion, nuevas_actividades, nuevo_costo):
+                        print("Cambios guardados con éxito.")
+                    else:
+                        print("No se pudieron guardar los cambios. Verifique el ID o la conexión.")
+                    break
+                elif confirmar == "no":
+                    print("Cambios descartados.")
+                    break
+                else:
+                    print("Entrada no válida. Debes responder 'SI' o 'NO'.")
+
             input("Presione Enter para continuar...")
 
         elif opcion == "6":
