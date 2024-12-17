@@ -49,19 +49,20 @@ class CRUDUsuario:
             if con:
                 con.desconectar()
     @staticmethod
-    def mostrarTodos():
+    def existeUsuario(id_usuario):
+        """
+        Verifica si un usuario existe en la base de datos por su ID.
+        """
         try:
             con = Conexion(CRUDUsuario.host, CRUDUsuario.user, CRUDUsuario.password, CRUDUsuario.db)
-            sql = """
-            SELECT id_usuario, nombre, correo, tipo_usuario
-            FROM usuario
-            """
-            cursor = con.ejecutaQuery(sql)
-            usuarios = cursor.fetchall()
-            return usuarios
+            sql = "SELECT 1 FROM usuario WHERE id_usuario = %s LIMIT 1"
+            cursor = con.ejecutaQuery(sql, (id_usuario,))
+            resultado = cursor.fetchone()
+            return resultado is not None
         except Exception as e:
-            print(f"Error al obtener la lista de usuarios: {e}")
-            return []
+            print(f"Error al verificar la existencia del usuario: {e}")
+            return False
         finally:
             if con:
                 con.desconectar()
+            

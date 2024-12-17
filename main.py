@@ -14,7 +14,6 @@ from DTO.Reserva import Reserva
 from DTO.Usuario import Usuario
 from DTO.Destino import Destino
 
-
 def registrarUsuario():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("---------------------------")
@@ -730,20 +729,39 @@ def menuClientes(nombre, idUsuario):
                 paquetes = paqueteCRUD.mostrarTodos()
                 if paquetes:
                     table_data = [[p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']] 
-                                  for p in paquetes]
+                                for p in paquetes]
                     print(tabulate(table_data, headers=["ID", "Nombre", "Descripción", "Precio", "Fecha Inicio", "Fecha Fin"], tablefmt="fancy_grid"))
                 else:
                     print("No hay paquetes disponibles.")
                     input("Presione Enter para continuar...")
                     continue
 
-                idPaquete = int(input("Ingrese el ID del paquete turístico que desea reservar: "))
-                fechaReserva = input("Por favor, ingrese la fecha de reserva (YYYY-MM-DD): ").strip()
-                nuevaReserva = Reserva(idUsuario, idPaquete, fechaReserva)
+                # Solicitar y validar el ID del paquete
+                while True:
+                    idPaquete = input("Ingrese el ID del paquete turístico que desea reservar: ").strip()
+                    if idPaquete.isdigit() and any(int(idPaquete) == p['id_paquete'] for p in paquetes):
+                        idPaquete = int(idPaquete)
+                        break
+                    else:
+                        print("El ID del paquete debe ser válido y existir en la lista.")
+
+                # Solicitar y validar la fecha de reserva
+                while True:
+                    fecha_reserva_input = input("Por favor, ingrese la fecha de reserva (DD-MM-YYYY): ").strip()
+                    try:
+                        # Validar y convertir la fecha al formato YYYY-MM-DD
+                        fecha_reserva = datetime.strptime(fecha_reserva_input, "%d-%m-%Y").date()
+                        break
+                    except ValueError:
+                        print("Error: La fecha debe estar en el formato DD-MM-YYYY. Inténtalo de nuevo.")
+
+                # Crear reserva usando el ID del usuario autenticado
+                nuevaReserva = Reserva(idUsuario, idPaquete, fecha_reserva)
                 if nuevaReserva.realizarReserva():
                     print("¡Tu reserva ha sido registrada con éxito!")
                 else:
                     print("No pudimos registrar tu reserva en este momento. Intenta nuevamente.")
+
             except Exception as e:
                 print(f"Hubo un error al intentar registrar la reserva: {e}")
             input("Presione Enter para continuar...")
