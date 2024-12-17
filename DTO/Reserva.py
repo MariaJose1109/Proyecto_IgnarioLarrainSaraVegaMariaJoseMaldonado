@@ -6,7 +6,7 @@ import datetime
 
 
 class Reserva:
-    def __init__(self, idUsuario, idPaquete, fechaReserva, estado="pendiente", idReserva=None):
+    def __init__(self, idUsuario, idPaquete, fechaReserva, estado="confirmada", idReserva=None):
         self.idReserva = idReserva
         self.idUsuario = idUsuario
         self.idPaquete = idPaquete
@@ -16,42 +16,6 @@ class Reserva:
     def __str__(self):
         return (f"Reserva(ID: {self.idReserva}, Usuario: {self.idUsuario}, "
                 f"Paquete: {self.idPaquete}, Fecha: {self.fechaReserva}, Estado: {self.estado})")
-
-    # Realizar una reserva
-    def realizarReserva(self):
-        try:
-            from DAO.CRUDUsuario import CRUDUsuario  # Importación local para evitar ciclos
-            from DAO.CRUDPaquete import mostrarUno   # Importación local
-
-            # Validar formato de fecha (DD-MM-YYYY)
-            if isinstance(self.fechaReserva, datetime.date):
-                self.fechaReserva = self.fechaReserva.strftime("%d-%m-%Y")
-            else:
-                self.fechaReserva = datetime.datetime.strptime(self.fechaReserva, "%d-%m-%Y").strftime("%d-%m-%Y")
-
-            # Validar la existencia del usuario
-            if not CRUDUsuario.existeUsuario(self.idUsuario):
-                print("Error: El usuario no existe.")
-                return False
-
-            # Validar la existencia del paquete
-            if not mostrarUno(self.idPaquete):
-                print("Error: El paquete no existe.")
-                return False
-
-            # Registrar la reserva
-            if agregarReserva(self):
-                print("\nReserva registrada correctamente.")
-                return True
-            else:
-                print("Error al registrar la reserva en la base de datos.")
-                return False
-        except ValueError:
-            print("Error: La fecha debe estar en el formato DD-MM-YYYY.")
-            return False
-        except Exception as e:
-            print(f"Error inesperado al realizar la reserva: {e}")
-            return False
 
     # Confirmar una reserva
     def confirmarReserva(self):
@@ -73,19 +37,21 @@ class Reserva:
     # Cancelar una reserva
     def cancelarReserva(self):
         try:
-            if self.estado != "pendiente":
-                print(f"No se puede cancelar la reserva. Estado actual: {self.estado}")
+            if self.estado == "cancelada":
+                print(f"La reserva ya está cancelada.")
                 return False
+            
             self.estado = "cancelada"
             if cambiarEstadoReserva(self.idReserva, self.estado):
-                print(f"Reserva cancelada con éxito. ID: {self.idReserva}")
+                print(f"Reserva {self.idReserva} cancelada con éxito.")
                 return True
             else:
-                print("Error al cancelar la reserva.")
+                print("No se pudo cancelar la reserva.")
                 return False
         except Exception as e:
-            print(f"Error inesperado al cancelar la reserva: {e}")
+            print(f"Error al cancelar la reserva: {e}")
             return False
+
 
     # Mostrar reservas por usuario
     @staticmethod
