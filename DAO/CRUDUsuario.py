@@ -66,3 +66,22 @@ class CRUDUsuario:
             if con:
                 con.desconectar()
             
+
+
+def mostrarTodos():
+    """
+    Consulta y retorna todos los paquetes turísticos.
+    """
+    try:
+        con = Conexion(CRUDUsuario.host, CRUDUsuario.user, CRUDUsuario.password, CRUDUsuario.db)
+        sql = """
+        SELECT * from usuario
+        """
+        cursor = con.ejecutaQuery(sql)
+        usuarios = cursor.fetchall()
+        return usuarios
+    except Exception as e:
+        print(f"Error al consultar todos los usuarios: {e}")
+        return []
+    finally:
+        con.desconectar()

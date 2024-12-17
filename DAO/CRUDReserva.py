@@ -12,14 +12,21 @@ def agregarReserva(reserva):
     """
     Inserta una nueva reserva en la base de datos.
     """
+    con = None
     try:
-        # Convertir la fecha al formato YYYY-MM-DD
-        fecha_reserva = datetime.strptime(reserva.fechaReserva, "%d-%m-%Y").strftime("%Y-%m-%d")
+        # Validar formato de fecha
+        if not isinstance(reserva.fechaReserva, str):
+            raise ValueError("La fecha debe ser una cadena en formato DD-MM-YYYY.")
         
-        con = Conexion(host, user, password, db)
+        # Convertir fecha al formato YYYY-MM-DD
+        fecha_reserva = datetime.strptime(reserva.fechaReserva, "%d-%m-%Y").strftime("%Y-%m-%d")
+
+        # Validar estado de la reserva
         if reserva.estado not in ['pendiente', 'confirmada', 'cancelada']:
             raise ValueError(f"Estado inválido: {reserva.estado}")
 
+        # Establecer conexión y ejecutar la consulta
+        con = Conexion(host, user, password, db)
         sql = """
         INSERT INTO reserva (id_usuario, id_paquete, fecha_reserva, estado)
         VALUES (%s, %s, %s, %s)
@@ -28,17 +35,18 @@ def agregarReserva(reserva):
         con.commit()
         print("Reserva registrada con éxito.")
         return True
-    except ValueError:
-        print("Error: La fecha debe estar en el formato DD-MM-YYYY.")
+
+    except ValueError as ve:
+        print(f"Error: {ve}")
         return False
     except Exception as e:
-        con.rollback()
+        if con:
+            con.rollback()
         print(f"Error al realizar la reserva: {e}")
         return False
     finally:
         if con:
             con.desconectar()
-
 # Consultar todas las reservas
 def mostrarTodos():
     """
@@ -131,23 +139,45 @@ def cambiarEstadoReserva(idReserva, nuevoEstado):
     """
     Actualiza el estado de una reserva específica.
     """
+    con = None
     try:
         con = Conexion(host, user, password, db)
-        sql = "UPDATE reserva SET estado = %s WHERE id_reserva = %s"
-        cursor = con.ejecutaQuery(sql, (nuevoEstado, idReserva))
-        if cursor.rowcount > 0:
-            con.commit()
-            print(f"Reserva {idReserva} actualizada a estado '{nuevoEstado}'.")
-            return True
-        else:
-            print(f"No se encontró la reserva {idReserva} o el estado ya es '{nuevoEstado}'.")
+
+        # Verificar si la reserva existe y su estado actual
+        verificar_sql = "SELECT estado FROM reserva WHERE id_reserva = %s"
+        cursor = con.ejecutaQuery(verificar_sql, (idReserva,))
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            print(f"No se encontró la reserva {idReserva}.")
             return False
+
+        estado_actual = resultado['estado']
+        if estado_actual == "cancelada":
+            print(f"La reserva {idReserva} ya está cancelada y no puede modificarse.")
+            return False
+
+        if estado_actual == nuevoEstado:
+            print(f"La reserva {idReserva} ya está en estado '{nuevoEstado}'.")
+            return False
+
+        # Actualizar el estado de la reserva
+        actualizar_sql = "UPDATE reserva SET estado = %s WHERE id_reserva = %s"
+        con.ejecutaQuery(actualizar_sql, (nuevoEstado, idReserva))
+        con.commit()
+
+        print(f"Reserva {idReserva} actualizada a estado '{nuevoEstado}'.")
+        return True
+
     except Exception as e:
-        con.rollback()
-        print(f"Error al actualizar el estado de la reserva: {e}")
+        if con:
+            con.rollback()
+        print(f"Error al actualizar la reserva: {e}")
         return False
+
     finally:
-        con.desconectar()
+        if con:
+            con.desconectar()
 
 # Consultar reservas por ID de usuario
 def mostrarReservaPorId(id_usuario):

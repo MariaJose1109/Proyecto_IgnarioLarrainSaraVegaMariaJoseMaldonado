@@ -188,3 +188,34 @@ def mostrarTodos():
     finally:
         con.desconectar()
 
+# Modificar paquete turístico
+def modificarPaquete(idPaquete, nuevo_nombre, nueva_descripcion, nuevo_precio, nueva_fecha_inicio, nueva_fecha_fin):
+    """
+    Modifica un paquete turístico por su ID.
+    - idPaquete: ID del paquete a modificar.
+    - nuevo_nombre: Nuevo nombre del paquete.
+    - nueva_descripcion: Nueva descripción del paquete.
+    - nuevo_precio: Nuevo precio total del paquete.
+    - nueva_fecha_inicio: Nueva fecha de inicio del paquete.
+    - nueva_fecha_fin: Nueva fecha de fin del paquete.
+    """
+    try:
+        con = Conexion(host, user, password, db)
+        sql = """
+        UPDATE paquete_turistico
+        SET nombre_paquete = %s,
+            descripcion = %s,
+            precio_total = %s,
+            fecha_inicio = %s,
+            fecha_fin = %s
+        WHERE id_paquete = %s
+        """
+        con.ejecutaQuery(sql, (nuevo_nombre, nueva_descripcion, nuevo_precio, nueva_fecha_inicio, nueva_fecha_fin, idPaquete))
+        con.commit()
+        return True
+    except Exception as e:
+        con.rollback()
+        print(f"Error al modificar el paquete: {e}")
+        return False
+    finally:
+        con.desconectar()

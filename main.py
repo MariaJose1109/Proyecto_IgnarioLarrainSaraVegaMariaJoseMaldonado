@@ -4,6 +4,8 @@ import random
 from datetime import datetime, timedelta
 from tabulate import tabulate
 
+from DAO.CRUDReserva import agregarReserva
+
 import DAO.CRUDUsuario as usuarioCRUD
 import DAO.CRUDReserva as reservaCRUD
 import DAO.CRUDDestino as destinoCRUD
@@ -22,48 +24,30 @@ def registrarUsuario():
     print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
     
     while True:
-        # Campos de entrada organizados en una tabla
-        campos = [
-            ["Ingrese Usuario:", ""],
-            ["Ingrese Correo:", ""],
-            ["Ingrese Contraseña:", ""],
-            ["Ingrese tipo Usuario (administrador/cliente):", ""]
-        ]
-        print(tabulate(campos, tablefmt="plain", colalign=("left", "left")))
-        
-        # Captura de entradas del usuario
-        nombre = input(">> ").strip()
-        correo = input(">> ").strip()
-        password = input(">> ").strip()
-        tipoUsuario = input(">> ").strip().lower()
-        
-        # Validación de campos vacíos
-        if not nombre or not password or not correo or not tipoUsuario:
-            error_msg = [
-                ["[Error]"],
-                ["Usuario, contraseña, correo y/o tipo Usuario no pueden estar vacíos."]
-            ]
-            print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            retry = input("¿Desea intentarlo de nuevo? [SI/NO]: ").strip().lower()
-            if retry != "si":
-                return None
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
-            continue
-        
-        # Validación del tipo de usuario
-        if tipoUsuario not in ["administrador", "cliente"]:
-            error_msg = [
-                ["[Error]"],
-                ["El tipo de usuario debe ser 'administrador' o 'cliente'."]
-            ]
-            print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            retry = input("¿Desea intentarlo de nuevo? [SI/NO]: ").strip().lower()
-            if retry != "si":
-                return None
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
-            continue
+        # Captura de entradas del usuario con validación individual
+        while True:
+            nombre = input("Ingrese Usuario: ").strip()
+            if nombre:
+                break
+            print(tabulate([["[Error]"], ["El nombre de usuario no puede estar vacío."]], tablefmt="fancy_grid"))
+
+        while True:
+            correo = input("Ingrese Correo: ").strip()
+            if correo:
+                break
+            print(tabulate([["[Error]"], ["El correo no puede estar vacío."]], tablefmt="fancy_grid"))
+
+        while True:
+            password = input("Ingrese Contraseña: ").strip()
+            if password:
+                break
+            print(tabulate([["[Error]"], ["La contraseña no puede estar vacía."]], tablefmt="fancy_grid"))
+
+        while True:
+            tipoUsuario = input("Ingrese tipo Usuario (administrador/cliente): ").strip().lower()
+            if tipoUsuario in ["administrador", "cliente"]:
+                break
+            print(tabulate([["[Error]"], ["El tipo de usuario debe ser 'administrador' o 'cliente'."]], tablefmt="fancy_grid"))
         
         # Intento de registro del usuario
         try:
@@ -77,8 +61,6 @@ def registrarUsuario():
             retry = input("¿Desea intentarlo de nuevo? [SI/NO]: ").strip().lower()
             if retry != "si":
                 return None
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
             continue
         
         if nuevoUsuario:
@@ -97,8 +79,7 @@ def registrarUsuario():
             retry = input("¿Intentar de nuevo? [SI/NO]: ").strip().lower()
             if retry != "si":
                 return None
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
+
 
 
 def login():
@@ -984,298 +965,164 @@ def menuPaquetes(nombre):
 
 def menuReservas(id_usuario):
     while True:
-        # Limpiar la pantalla
-        os.system('cls' if os.name == 'nt' else 'clear')
-        
-        # Título del menú utilizando tabulate
-        titulo = [["MENÚ RESERVAS"]]
-        print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
-        
-        # Opciones del menú organizadas en una tabla
-        opciones = [
-            ["1", "Mostrar todas las reservas"],
-            ["2", "Mostrar una reserva específica"],
-            ["3", "Mostrar reservas por estado"],
-            ["4", "Realizar una nueva reserva"],
-            ["5", "Cancelar una reserva"],
-            ["6", "Salir"]
-        ]
-        headers = ["Opción", "Descripción"]
-        print(tabulate(opciones, headers=headers, tablefmt="fancy_grid", stralign="left"))
-        print()  # Espacio adicional para mejor visualización
-        
-        # Captura de la opción seleccionada por el usuario
-        opcion = input("Seleccione una opción (1-6): ").strip()
-        
-        if opcion == "1":
-            # Mostrar todas las reservas
+        try:
+            # Limpiar la pantalla
             os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_submenu = [["MOSTRAR TODAS LAS RESERVAS"]]
-            print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
             
-            reservas = reservaCRUD.mostrarTodos()
-            if reservas:
-                table_data = [
-                    [r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] 
-                    for r in reservas
-                ]
-                headers_reservas = ["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"]
-                print(tabulate(table_data, headers=headers_reservas, tablefmt="fancy_grid", stralign="left"))
-            else:
-                mensaje = [["No hay reservas registradas."]]
-                print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
+            # Título del menú utilizando tabulate
+            titulo = [["MENÚ RESERVAS"]]
+            print(tabulate(titulo, tablefmt="fancy_grid", stralign="center"))
             
-            input("Presione Enter para continuar...")
-        
-        elif opcion == "2":
-            # Mostrar una reserva específica
-            os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_submenu = [["MOSTRAR UNA RESERVA ESPECÍFICA"]]
-            print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+            # Opciones del menú organizadas en una tabla
+            opciones = [
+                ["1", "Mostrar todas las reservas"],
+                ["2", "Mostrar una reserva específica"],
+                ["3", "Mostrar reservas por estado"],
+                ["4", "Realizar una nueva reserva"],
+                ["5", "Cancelar una reserva"],
+                ["6", "Salir"]
+            ]
+            headers = ["Opción", "Descripción"]
+            print(tabulate(opciones, headers=headers, tablefmt="fancy_grid", stralign="left"))
+            print()  # Espacio adicional para mejor visualización
             
-            while True:
-                id_reserva = input("Ingrese el ID de la reserva: ").strip()
-                if id_reserva.isdigit():
-                    reserva = reservaCRUD.mostrarUno(id_reserva)
-                    if reserva:
-                        table_data = [
-                            [reserva['id_reserva'], reserva['id_usuario'], reserva['id_paquete'], reserva['fecha_reserva'], reserva['estado']]
-                        ]
-                        headers_reserva = ["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"]
-                        print("\n" + tabulate(table_data, headers=headers_reserva, tablefmt="fancy_grid", stralign="left") + "\n")
-                    else:
-                        mensaje = [["Reserva no encontrada."]]
-                        print("\n" + tabulate(mensaje, tablefmt="fancy_grid", stralign="center") + "\n")
-                    break
-                else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["Debe ingresar un ID válido (numérico)."]
+            # Captura de la opción seleccionada por el usuario
+            opcion = input("Seleccione una opción (1-6): ").strip()
+            
+            if opcion == "1":
+                # Mostrar todas las reservas
+                os.system('cls' if os.name == 'nt' else 'clear')
+                titulo_submenu = [["MOSTRAR TODAS LAS RESERVAS"]]
+                print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+                
+                reservas = reservaCRUD.mostrarTodos()
+                if reservas:
+                    table_data = [
+                        [r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] 
+                        for r in reservas
                     ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
+                    headers_reservas = ["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"]
+                    print(tabulate(table_data, headers=headers_reservas, tablefmt="fancy_grid", stralign="left"))
+                else:
+                    print(tabulate([["No hay reservas registradas."]], tablefmt="fancy_grid", stralign="center"))
+                
+                input("Presione Enter para continuar...")
             
-            input("Presione Enter para continuar...")
-        
-        elif opcion == "3":
-            # Mostrar reservas por estado
-            os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_submenu = [["MOSTRAR RESERVAS POR ESTADO"]]
-            print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+            elif opcion == "2":
+                # Mostrar una reserva específica
+                os.system('cls' if os.name == 'nt' else 'clear')
+                titulo_submenu = [["MOSTRAR UNA RESERVA ESPECÍFICA"]]
+                print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+                
+                while True:
+                    id_reserva = input("Ingrese el ID de la reserva: ").strip()
+                    if id_reserva.isdigit():
+                        reserva = reservaCRUD.mostrarUno(id_reserva)
+                        if reserva:
+                            table_data = [
+                                [reserva['id_reserva'], reserva['id_usuario'], reserva['id_paquete'], reserva['fecha_reserva'], reserva['estado']]
+                            ]
+                            headers_reserva = ["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"]
+                            print(tabulate(table_data, headers=headers_reserva, tablefmt="fancy_grid", stralign="left"))
+                        else:
+                            print(tabulate([["Reserva no encontrada."]], tablefmt="fancy_grid", stralign="center"))
+                        break
+                    else:
+                        print(tabulate([["[Error]"], ["Debe ingresar un ID válido (numérico)."]], tablefmt="fancy_grid", stralign="center"))
+                
+                input("Presione Enter para continuar...")
             
-            while True:
+            elif opcion == "3":
+                # Mostrar reservas por estado
+                os.system('cls' if os.name == 'nt' else 'clear')
+                titulo_submenu = [["MOSTRAR RESERVAS POR ESTADO"]]
+                print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+                
                 estados_opciones = [
                     ["1", "Pendiente"],
                     ["2", "Confirmada"],
                     ["3", "Cancelada"]
                 ]
-                headers_estados = ["Opción", "Estado"]
-                print(tabulate(estados_opciones, headers=headers_estados, tablefmt="fancy_grid", stralign="left"))
-                estado_opcion = input("Ingrese el número del estado: ").strip()
+                print(tabulate(estados_opciones, headers=["Opción", "Estado"], tablefmt="fancy_grid", stralign="left"))
                 
+                estado_opcion = input("Seleccione el número del estado: ").strip()
                 estados_validos = {"1": "pendiente", "2": "confirmada", "3": "cancelada"}
+                
                 if estado_opcion in estados_validos:
                     estado = estados_validos[estado_opcion]
                     reservas = reservaCRUD.mostrarParcial(estado)
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
-                    
                     if reservas:
-                        table_data = [
-                            [r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] 
-                            for r in reservas
-                        ]
-                        print(tabulate(table_data, headers=headers_reservas, tablefmt="fancy_grid", stralign="left"))
+                        table_data = [[r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] for r in reservas]
+                        print(tabulate(table_data, headers=["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"], tablefmt="fancy_grid"))
                     else:
-                        mensaje = [[f"No hay reservas con el estado '{estado}'."]]
-                        print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
-                    break
+                        print(tabulate([["No hay reservas con ese estado."]], tablefmt="fancy_grid", stralign="center"))
                 else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["Opción inválida. Seleccione 1, 2 o 3."]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
-            input("Presione Enter para continuar...")
-        
-        elif opcion == "4":
-            # Realizar una nueva reserva
-            os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_submenu = [["REALIZAR UNA NUEVA RESERVA"]]
-            print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
-            
-            paquetes = paqueteCRUD.mostrarTodos()
-            if not paquetes:
-                mensaje = [["No hay paquetes turísticos disponibles para reservar."]]
-                print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
+                    print(tabulate([["[Error]"], ["Opción no válida."]], tablefmt="fancy_grid", stralign="center"))
+                
                 input("Presione Enter para continuar...")
-                continue
-            
-            # Mostrar paquetes disponibles
-            table_data_paquetes = [
-                [p['id_paquete'], p['nombre_paquete'], p['descripcion'], p['precio_total'], p['fecha_inicio'], p['fecha_fin']]
-                for p in paquetes
-            ]
-            headers_paquetes = ["ID Paquete", "Nombre", "Descripción", "Precio", "Inicio", "Fin"]
-            print("\nPaquetes disponibles:\n")
-            print(tabulate(table_data_paquetes, headers=headers_paquetes, tablefmt="fancy_grid", stralign="left"))
-            
-            # Solicitar y validar el ID del paquete
-            while True:
-                id_paquete = input("Ingrese el ID del paquete a reservar: ").strip()
-                if id_paquete.isdigit() and any(int(id_paquete) == p['id_paquete'] for p in paquetes):
-                    id_paquete = int(id_paquete)
-                    break
-                else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["El ID del paquete debe ser válido y existir en la lista."]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
-            # Mostrar usuarios disponibles y validar el ID del usuario
-            usuarios = usuarioCRUD.mostrarTodos()
-            if not usuarios:
-                mensaje = [["No hay usuarios disponibles para asignar la reserva."]]
-                print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
-                input("Presione Enter para continuar...")
-                continue
-            
-            os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_usuarios = [["LISTA DE USUARIOS DISPONIBLES"]]
-            print(tabulate(titulo_usuarios, tablefmt="fancy_grid", stralign="center"))
-            
-            table_data_usuarios = [
-                [u['id_usuario'], u['nombre'], u['correo'], u['tipo_usuario']] 
-                for u in usuarios
-            ]
-            headers_usuarios = ["ID Usuario", "Nombre", "Correo", "Tipo Usuario"]
-            print(tabulate(table_data_usuarios, headers=headers_usuarios, tablefmt="fancy_grid", stralign="left"))
-            
-            while True:
-                id_usuario_reserva = input("Ingrese el ID del usuario al que se asignará la reserva: ").strip()
-                if id_usuario_reserva.isdigit():
-                    id_usuario_reserva = int(id_usuario_reserva)
-                    if any(u['id_usuario'] == id_usuario_reserva for u in usuarios):
-                        break
-                    else:
-                        error_msg = [
-                            ["[Error]"],
-                            ["El ID del usuario no existe. Intente nuevamente."]
-                        ]
-                        print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-                else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["El ID del usuario debe ser numérico."]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
-            # Fecha de reserva
-            fecha_reserva = datetime.now().date()
-            fecha_reserva_str = fecha_reserva.strftime("%Y-%m-%d")
-            
-            # Confirmar reserva con validación estricta
-            confirmar = input("\n¿Confirmar reserva? [SI/NO]: ").strip().upper()
-            if confirmar == "SI":
-                nueva_reserva = Reserva(id_usuario_reserva, id_paquete, fecha_reserva_str)
-                try:
-                    if nueva_reserva.realizarReserva():
-                        exito_msg = [
-                            ["¡Éxito!"],
-                            ["Reserva realizada con éxito y asignada al usuario."]
-                        ]
-                        print("\n" + tabulate(exito_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-                    else:
-                        error_msg = [
-                            ["[Error]"],
-                            ["No se pudo realizar la reserva. Intente nuevamente."]
-                        ]
-                        print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-                except Exception as e:
-                    error_msg = [
-                        ["[Error]"],
-                        [f"Se produjo un error al realizar la reserva: {e}"]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            elif confirmar == "NO":
-                mensaje = [["Reserva cancelada."]]
-                print("\n" + tabulate(mensaje, tablefmt="fancy_grid", stralign="center") + "\n")
-            else:
-                error_msg = [
-                    ["[Error]"],
-                    ["Opción inválida. Por favor, escriba 'SI' o 'NO'."]
-                ]
-                print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
-            input("Presione Enter para continuar...")
-        
-        elif opcion == "5":
-            # Cancelar una reserva
-            os.system('cls' if os.name == 'nt' else 'clear')
-            titulo_submenu = [["CANCELAR UNA RESERVA"]]
-            print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
-            
-            reservas = reservaCRUD.mostrarTodos()
-            if not reservas:
-                mensaje = [["No hay reservas para cancelar."]]
-                print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
-                input("Presione Enter para continuar...")
-                continue
-            
-            # Mostrar todas las reservas en una tabla
-            table_data = [
-                [r['id_reserva'], r['id_usuario'], r['id_paquete'], r['fecha_reserva'], r['estado']] 
-                for r in reservas
-            ]
-            headers_reservas = ["ID Reserva", "ID Usuario", "ID Paquete", "Fecha Reserva", "Estado"]
-            print("\nReservas registradas:\n")
-            print(tabulate(table_data, headers=headers_reservas, tablefmt="fancy_grid", stralign="left"))
-            
-            # Capturar y validar el ID de la reserva a cancelar
-            while True:
-                id_reserva = input("Ingrese el ID de la reserva a cancelar: ").strip()
-                if id_reserva.isdigit():
-                    if reservaCRUD.cancelarReserva(id_reserva):
-                        exito_msg = [
-                            ["¡Éxito!"],
-                            ["Reserva cancelada con éxito."]
-                        ]
-                        print("\n" + tabulate(exito_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-                    else:
-                        error_msg = [
-                            ["[Error]"],
-                            ["No se pudo cancelar la reserva. Verifique el ID."]
-                        ]
-                        print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-                    break
-                else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["Debe ingresar un ID válido (numérico)."]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
-            input("Presione Enter para continuar...")
-        
-        elif opcion == "6":
-            # Salir del menú de reservas
-            os.system('cls' if os.name == 'nt' else 'clear')
-            mensaje = [["Regresando al menú principal..."]]
-            print(tabulate(mensaje, tablefmt="fancy_grid", stralign="center"))
-            input("Presione Enter para continuar...")
-            break
-        
-        else:
-            # Opción no válida
-            os.system('cls' if os.name == 'nt' else 'clear')
-            error_msg = [
-                ["[Error]"],
-                ["Opción no válida. Intente nuevamente."]
-            ]
-            print(tabulate(error_msg, tablefmt="fancy_grid", stralign="center"))
-            input("Presione Enter para continuar...")
 
+            elif opcion == "4":
+                # Realizar una nueva reserva
+                os.system('cls' if os.name == 'nt' else 'clear')
+                titulo_submenu = [["REALIZAR UNA NUEVA RESERVA"]]
+                print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+                
+                paquetes = paqueteCRUD.mostrarTodos()
+                if not paquetes:
+                    print(tabulate([["No hay paquetes disponibles."]], tablefmt="fancy_grid", stralign="center"))
+                    input("Presione Enter para continuar...")
+                    continue
+                
+                table_data = [[p['id_paquete'], p['nombre_paquete'], f"${p['precio_total']:.2f}"] for p in paquetes]
+                print(tabulate(table_data, headers=["ID Paquete", "Nombre", "Precio"], tablefmt="fancy_grid"))
+                
+                id_paquete = input("Ingrese el ID del paquete: ").strip()
+                fecha_reserva = datetime.now().date().strftime("%Y-%m-%d")
+                nueva_reserva = Reserva(id_usuario, id_paquete, fecha_reserva)
+                
+                if reservaCRUD.agregarReserva(nueva_reserva):
+                    print(tabulate([["¡Éxito!"], ["Reserva confirmada con éxito."]], tablefmt="fancy_grid", stralign="center"))
+                else:
+                    print(tabulate([["[Error]"], ["No se pudo realizar la reserva."]], tablefmt="fancy_grid", stralign="center"))
+                
+                input("Presione Enter para continuar...")
+            
+            elif opcion == "5":
+                # Cancelar una reserva
+                os.system('cls' if os.name == 'nt' else 'clear')
+                titulo_submenu = [["CANCELAR UNA RESERVA"]]
+                print(tabulate(titulo_submenu, tablefmt="fancy_grid", stralign="center"))
+
+                reservas = reservaCRUD.mostrarTodos()
+                if not reservas:
+                    print(tabulate([["No hay reservas disponibles."]], tablefmt="fancy_grid", stralign="center"))
+                    input("Presione Enter para continuar...")
+                    continue
+                
+                table_data = [[r['id_reserva'], r['estado']] for r in reservas]
+                print(tabulate(table_data, headers=["ID Reserva", "Estado"], tablefmt="fancy_grid"))
+                
+                id_reserva = input("Ingrese el ID de la reserva a cancelar: ").strip()
+                if reservaCRUD.cambiarEstadoReserva(id_reserva, "cancelada"):
+                    print(tabulate([["¡Éxito!"], ["Reserva cancelada con éxito."]], tablefmt="fancy_grid", stralign="center"))
+                else:
+                    print(tabulate([["[Error]"], ["No se pudo cancelar la reserva."]], tablefmt="fancy_grid", stralign="center"))
+                
+                input("Presione Enter para continuar...")
+
+            elif opcion == "6":
+                # Salir del menú
+                print(tabulate([["Saliendo al menú principal..."]], tablefmt="fancy_grid", stralign="center"))
+                input("Presione Enter para continuar...")
+                break
+
+            else:
+                print(tabulate([["[Error]"], ["Opción no válida. Intente de nuevo."]], tablefmt="fancy_grid", stralign="center"))
+                input("Presione Enter para continuar...")
+
+        except Exception as e:
+            print(tabulate([["[Error]"], [f"Ocurrió un error inesperado: {e}"]], tablefmt="fancy_grid", stralign="center"))
+            input("Presione Enter para continuar...")
 
 def menuAdmin(nombre, idUsuario):
     while True:
@@ -1427,32 +1274,19 @@ def menuClientes(nombre, idUsuario):
                 while True:
                     fecha_reserva_input = input("Por favor, ingrese la fecha de reserva (DD-MM-YYYY): ").strip()
                     try:
-                        # Validar y convertir la fecha al formato YYYY-MM-DD
-                        fecha_reserva = datetime.strptime(fecha_reserva_input, "%d-%m-%Y").date()
-                        fecha_reserva_str = fecha_reserva.strftime("%Y-%m-%d")
+                        # Validar el formato de la fecha
+                        datetime.strptime(fecha_reserva_input, "%d-%m-%Y")
                         break
                     except ValueError:
-                        error_msg = [
-                            ["[Error]"],
-                            ["La fecha debe estar en el formato DD-MM-YYYY. Inténtalo de nuevo."]
-                        ]
-                        print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
+                        print("Error: La fecha debe estar en el formato DD-MM-YYYY. Intente nuevamente.")
 
                 # Crear reserva usando el ID del usuario autenticado
-                nuevaReserva = Reserva(idUsuario, idPaquete, fecha_reserva_str)
-                if nuevaReserva.realizarReserva():
-                    exito_msg = [
-                        ["¡Éxito!"],
-                        ["Tu reserva ha sido registrada con éxito."]
-                    ]
-                    print("\n" + tabulate(exito_msg, tablefmt="fancy_grid", stralign="center") + "\n")
+                nueva_reserva = Reserva(idUsuario, idPaquete, fecha_reserva_input)
+                if agregarReserva(nueva_reserva):
+                    print("¡Reserva creada con éxito!")
                 else:
-                    error_msg = [
-                        ["[Error]"],
-                        ["No pudimos registrar tu reserva en este momento. Intenta nuevamente."]
-                    ]
-                    print("\n" + tabulate(error_msg, tablefmt="fancy_grid", stralign="center") + "\n")
-            
+                    print("No pudimos registrar tu reserva. Intenta nuevamente.")
+                            
             except Exception as e:
                 error_msg = [
                     ["[Error]"],
@@ -1611,29 +1445,41 @@ def main():
             titulo_login = [["INICIAR SESIÓN"]]
             print(tabulate(titulo_login, tablefmt="fancy_grid", stralign="center"))
             
-            # Llamada a la función login (asegúrate de tenerla definida)
-            datos_usuario = login()
+            try:
+                # Llamada a la función login (asegúrate de tenerla definida)
+                datos_usuario = login()
+                
+                # Validar si el login fue exitoso
+                if datos_usuario and datos_usuario.get("autenticado"):
+                    nombre = datos_usuario.get("nombre", "Usuario")
+                    tipo_usuario = datos_usuario.get("tipo_usuario")
+                    id_usuario = datos_usuario.get("id_usuario")
+
+                    if not tipo_usuario or not id_usuario:
+                        raise ValueError("Faltan datos necesarios del usuario.")
+
+                    # Mensaje de bienvenida en tabla
+                    mensaje_bienvenida = [[f"¡Bienvenido, {nombre}!"]]
+                    print("\n" + tabulate(mensaje_bienvenida, tablefmt="fancy_grid", stralign="center") + "\n")
+                    input("Presione Enter para continuar...")
+                    
+                    # Redirigir al menú correspondiente según el tipo de usuario
+                    if tipo_usuario == "administrador":
+                        menuAdmin(nombre, id_usuario)
+                    elif tipo_usuario == "cliente":
+                        menuClientes(nombre, id_usuario)
+                    else:
+                        print(tabulate([["[Error]"], ["Tipo de usuario no reconocido."]], tablefmt="fancy_grid", stralign="center"))
+                        input("Presione Enter para continuar...")
+                else:
+                    # Mensaje de error en tabla
+                    mensaje_error = [["[Error]"], ["Credenciales inválidas. Por favor, inténtelo de nuevo."]]
+                    print("\n" + tabulate(mensaje_error, tablefmt="fancy_grid", stralign="center") + "\n")
+                    input("Presione Enter para continuar...")
             
-            if datos_usuario and datos_usuario.get("autenticado"):
-                # Mensaje de bienvenida en tabla
-                mensaje_bienvenida = [
-                    [f"¡Bienvenido, {datos_usuario['nombre']}!"]
-                ]
-                print("\n" + tabulate(mensaje_bienvenida, tablefmt="fancy_grid", stralign="center") + "\n")
-                
-                input("Presione Enter para continuar...")
-                
-                # Redirigir al menú correspondiente según el tipo de usuario
-                if datos_usuario["tipo_usuario"] == "administrador":
-                    menuAdmin(datos_usuario["nombre"], datos_usuario["id_usuario"])
-                elif datos_usuario["tipo_usuario"] == "cliente":
-                    menuClientes(datos_usuario["nombre"], datos_usuario["id_usuario"])
-            else:
-                # Mensaje de error en tabla
-                mensaje_error = [
-                    ["[Error]"],
-                    ["Credenciales inválidas. Por favor, inténtelo de nuevo."]
-                ]
+            except Exception as e:
+                # Captura de cualquier error inesperado
+                mensaje_error = [["[Error]"], [f"Ocurrió un error: {e}"]]
                 print("\n" + tabulate(mensaje_error, tablefmt="fancy_grid", stralign="center") + "\n")
                 input("Presione Enter para continuar...")
         
@@ -1647,10 +1493,7 @@ def main():
             registrarUsuario()
             
             # Mensaje de éxito en tabla
-            mensaje_exito = [
-                ["¡Éxito!"],
-                ["Usuario registrado correctamente."]
-            ]
+            mensaje_exito = [["¡Éxito!"]]
             print("\n" + tabulate(mensaje_exito, tablefmt="fancy_grid", stralign="center") + "\n")
             input("Presione Enter para continuar...")
         
@@ -1663,14 +1506,8 @@ def main():
         
         else:
             # Opción no válida
-            os.system('cls' if os.name == 'nt' else 'clear')
-            mensaje_error = [
-                ["[Error]"],
-                ["Opción no válida. Intente nuevamente."]
-            ]
-            print(tabulate(mensaje_error, tablefmt="fancy_grid", stralign="center"))
+            mensaje_error = [["[Error]"], ["Opción no válida. Intente nuevamente."]]
+            print("\n" + tabulate(mensaje_error, tablefmt="fancy_grid", stralign="center") + "\n")
             input("Presione Enter para continuar...")
-
-
 if __name__ == "__main__":
     main()
