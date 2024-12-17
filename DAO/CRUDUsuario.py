@@ -48,3 +48,20 @@ class CRUDUsuario:
         finally:
             if con:
                 con.desconectar()
+    @staticmethod
+    def mostrarTodos():
+        try:
+            con = Conexion(CRUDUsuario.host, CRUDUsuario.user, CRUDUsuario.password, CRUDUsuario.db)
+            sql = """
+            SELECT id_usuario, nombre, correo, tipo_usuario
+            FROM usuario
+            """
+            cursor = con.ejecutaQuery(sql)
+            usuarios = cursor.fetchall()
+            return usuarios
+        except Exception as e:
+            print(f"Error al obtener la lista de usuarios: {e}")
+            return []
+        finally:
+            if con:
+                con.desconectar()

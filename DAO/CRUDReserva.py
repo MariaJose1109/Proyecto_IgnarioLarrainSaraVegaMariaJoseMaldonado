@@ -7,12 +7,15 @@ password = 'adminagencia'
 db = 'agencia_de_viajes'
 
 # Registrar reserva
-def registrarReserva(reserva):
+def agregarReserva(reserva):
+    """
+    Inserta una nueva reserva en la base de datos.
+    """
     try:
         con = Conexion(host, user, password, db)
         if reserva.estado not in ['pendiente', 'confirmada', 'cancelada']:
             raise ValueError(f"Estado inválido: {reserva.estado}")
-        
+
         sql = """
         INSERT INTO reserva (id_usuario, id_paquete, fecha_reserva, estado)
         VALUES (%s, %s, %s, %s)
@@ -29,53 +32,87 @@ def registrarReserva(reserva):
         con.desconectar()
 
 # Consultar todas las reservas
-def obtenerReserva():
+def mostrarTodos():
+    """
+    Obtiene todas las reservas registradas en la base de datos.
+    """
     try:
         con = Conexion(host, user, password, db)
-        sql = "SELECT * FROM reserva"
+        sql = """
+        SELECT r.id_reserva, r.id_usuario, u.nombre AS nombre_usuario,
+               r.id_paquete, p.nombre_paquete, r.fecha_reserva, r.estado
+        FROM reserva r
+        INNER JOIN usuario u ON r.id_usuario = u.id_usuario
+        INNER JOIN paquete_turistico p ON r.id_paquete = p.id_paquete
+        """
         cursor = con.ejecutaQuery(sql)
         reservas = cursor.fetchall()
-        con.desconectar()
-        
-        if reservas:
-            print("Reservas encontradas:")
-            for reserva in reservas:
-                print(reserva)
-        else:
-            print("No hay reservas registradas.")
         return reservas
     except Exception as e:
         print(f"Error al consultar las reservas: {e}")
         return []
-
-# Consultar reservas por ID de usuario
-def obtenerReserva(idUsuario):
-    try:
-        con = Conexion(host, user, password, db)
-        sql = "SELECT * FROM reserva WHERE id_usuario = %s"
-        cursor = con.ejecutaQuery(sql, (idUsuario,))
-        reservas = cursor.fetchall()
+    finally:
         con.desconectar()
 
-        if reservas:
-            print(f"Reservas del usuario {idUsuario}:")
-            for reserva in reservas:
-                print(reserva)
-        else:
-            print(f"No se encontraron reservas para el usuario {idUsuario}.")
+# Consultar una reserva por ID
+def mostrarUno(idReserva):
+    """
+    Obtiene una reserva específica por ID.
+    """
+    try:
+        con = Conexion(host, user, password, db)
+        sql = """
+        SELECT r.id_reserva, r.id_usuario, u.nombre AS nombre_usuario,
+               r.id_paquete, p.nombre_paquete, r.fecha_reserva, r.estado
+        FROM reserva r
+        INNER JOIN usuario u ON r.id_usuario = u.id_usuario
+        INNER JOIN paquete_turistico p ON r.id_paquete = p.id_paquete
+        WHERE r.id_reserva = %s
+        """
+        cursor = con.ejecutaQuery(sql, (idReserva,))
+        reserva = cursor.fetchone()
+        return reserva
+    except Exception as e:
+        print(f"Error al consultar la reserva: {e}")
+        return None
+    finally:
+        con.desconectar()
+
+# Consultar reservas parciales por estado
+def mostrarParcial(estado):
+    """
+    Obtiene reservas filtradas por estado (pendiente, confirmada, cancelada).
+    """
+    try:
+        con = Conexion(host, user, password, db)
+        sql = """
+        SELECT r.id_reserva, r.id_usuario, u.nombre AS nombre_usuario,
+               r.id_paquete, p.nombre_paquete, r.fecha_reserva, r.estado
+        FROM reserva r
+        INNER JOIN usuario u ON r.id_usuario = u.id_usuario
+        INNER JOIN paquete_turistico p ON r.id_paquete = p.id_paquete
+        WHERE r.estado = %s
+        """
+        cursor = con.ejecutaQuery(sql, (estado,))
+        reservas = cursor.fetchall()
         return reservas
     except Exception as e:
-        print(f"Error al consultar las reservas del usuario: {e}")
+        print(f"Error al consultar reservas parciales: {e}")
         return []
+    finally:
+        con.desconectar()
 
-# Eliminar reserva
+# Eliminar una reserva
 def eliminarReserva(idReserva):
+    """
+    Elimina una reserva específica de la base de datos.
+    """
     try:
         con = Conexion(host, user, password, db)
         sql = "DELETE FROM reserva WHERE id_reserva = %s"
         con.ejecutaQuery(sql, (idReserva,))
         con.commit()
-        print("Reserva eliminada con éxito.")
+        print(f"Reserva {idReserva} eliminada con éxito.")
         return True
     except Exception as e:
         con.rollback()
@@ -84,8 +121,11 @@ def eliminarReserva(idReserva):
     finally:
         con.desconectar()
 
-# Cancelar reserva (cambia el estado a 'cancelada')
+# Cancelar reserva (actualiza el estado a 'cancelada')
 def cancelarReserva(idReserva):
+    """
+    Cambia el estado de la reserva a 'cancelada' si está 'pendiente'.
+    """
     try:
         con = Conexion(host, user, password, db)
         sql = "UPDATE reserva SET estado = 'cancelada' WHERE id_reserva = %s AND estado = 'pendiente'"
@@ -104,25 +144,25 @@ def cancelarReserva(idReserva):
     finally:
         con.desconectar()
 
-# Cambiar estado de una reserva
-def cambiarEstadoReserva(idReserva, nuevoEstado):
+# Confirmar reserva (actualiza el estado a 'confirmada')
+def confirmarReserva(idReserva):
+    """
+    Cambia el estado de la reserva a 'confirmada'.
+    """
     try:
-        if nuevoEstado not in ['pendiente', 'confirmada', 'cancelada']:
-            raise ValueError(f"Estado inválido: {nuevoEstado}")
-
         con = Conexion(host, user, password, db)
-        sql = "UPDATE reserva SET estado = %s WHERE id_reserva = %s"
-        cursor = con.ejecutaQuery(sql, (nuevoEstado, idReserva))
+        sql = "UPDATE reserva SET estado = 'confirmada' WHERE id_reserva = %s"
+        cursor = con.ejecutaQuery(sql, (idReserva,))
         if cursor.rowcount > 0:
             con.commit()
-            print(f"El estado de la reserva {idReserva} ha sido actualizado a '{nuevoEstado}'.")
+            print(f"Reserva {idReserva} confirmada con éxito.")
             return True
         else:
-            print(f"No se encontró la reserva {idReserva} para actualizar.")
+            print(f"No se pudo confirmar la reserva {idReserva}: no existe.")
             return False
     except Exception as e:
         con.rollback()
-        print(f"Error al cambiar el estado de la reserva: {e}")
+        print(f"Error al confirmar la reserva: {e}")
         return False
     finally:
         con.desconectar()
